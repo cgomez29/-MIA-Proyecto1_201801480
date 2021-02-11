@@ -72,11 +72,13 @@
 #include <stdio.h>
 #include <string>
 #include "scanner.h"
-#include "node.h"
+#include "Node.h"
 
 extern int yylineno;
 extern int columna;
 extern char *yytext;
+extern Node *root;
+
 
 int yyerror(const char* msg){
         std::cout<< "Error sintáctico: " << msg << std::endl;
@@ -84,7 +86,7 @@ int yyerror(const char* msg){
 }
 
 
-#line 88 "parser.cpp"
+#line 90 "parser.cpp"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -139,9 +141,11 @@ extern int yydebug;
     path = 262,
     v_integer = 263,
     v_string = 264,
-    k = 265,
-    m = 266,
-    equals = 267
+    id = 265,
+    route = 266,
+    k = 267,
+    m = 268,
+    equals = 269
   };
 #endif
 
@@ -149,12 +153,12 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 21 "parser.y"
+#line 23 "parser.y"
 
 char                stringVal[500];
 class Node          *node;
 
-#line 158 "parser.cpp"
+#line 162 "parser.cpp"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -471,21 +475,21 @@ union yyalloc
 #endif /* !YYCOPY_NEEDED */
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  8
+#define YYFINAL  9
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   11
+#define YYLAST   12
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  13
+#define YYNTOKENS  15
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  4
+#define YYNNTS  5
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  7
+#define YYNRULES  9
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  16
+#define YYNSTATES  18
 
 #define YYUNDEFTOK  2
-#define YYMAXUTOK   267
+#define YYMAXUTOK   269
 
 
 /* YYTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
@@ -523,14 +527,14 @@ static const yytype_int8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
-       5,     6,     7,     8,     9,    10,    11,    12
+       5,     6,     7,     8,     9,    10,    11,    12,    13,    14
 };
 
 #if YYDEBUG
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int8 yyrline[] =
 {
-       0,    56,    56,    60,    64,    65,    66,    67
+       0,    61,    61,    65,    68,    69,    73,    74,    75,    76
 };
 #endif
 
@@ -540,8 +544,8 @@ static const yytype_int8 yyrline[] =
 static const char *const yytname[] =
 {
   "$end", "error", "$undefined", "mkdisk", "size", "f", "u", "path",
-  "v_integer", "v_string", "k", "m", "equals", "$accept", "Start",
-  "Command", "MKParams", YY_NULLPTR
+  "v_integer", "v_string", "id", "route", "k", "m", "equals", "$accept",
+  "Start", "Command", "MKSENTENCE", "MKParams", YY_NULLPTR
 };
 #endif
 
@@ -551,11 +555,11 @@ static const char *const yytname[] =
 static const yytype_int16 yytoknum[] =
 {
        0,   256,   257,   258,   259,   260,   261,   262,   263,   264,
-     265,   266,   267
+     265,   266,   267,   268,   269
 };
 # endif
 
-#define YYPACT_NINF (-7)
+#define YYPACT_NINF (-9)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
@@ -569,8 +573,8 @@ static const yytype_int16 yytoknum[] =
      STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-      -2,    -4,     6,    -7,    -5,    -3,    -1,    -7,    -7,     0,
-      -6,     1,    -7,    -7,    -7,    -7
+      -2,    -4,     6,    -9,    -7,    -6,    -5,    -4,    -9,    -9,
+       2,    -8,     3,    -9,    -9,    -9,    -9,    -9
 };
 
   /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -578,20 +582,20 @@ static const yytype_int8 yypact[] =
      means the default is an error.  */
 static const yytype_int8 yydefact[] =
 {
-       0,     0,     0,     2,     0,     0,     0,     3,     1,     0,
-       0,     0,     4,     5,     6,     7
+       0,     0,     0,     2,     0,     0,     0,     3,     5,     1,
+       0,     0,     0,     4,     6,     7,     8,     9
 };
 
   /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-      -7,    -7,    -7,    -7
+      -9,    -9,    -9,    -9,     4
 };
 
   /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-      -1,     2,     3,     7
+      -1,     2,     3,     7,     8
 };
 
   /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -599,34 +603,34 @@ static const yytype_int8 yydefgoto[] =
      number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
-       4,     1,     5,     6,    13,    14,     8,     9,    12,    10,
-      15,    11
+       4,     1,     5,     6,    15,    16,     9,    10,    11,    12,
+      14,    13,    17
 };
 
 static const yytype_int8 yycheck[] =
 {
-       4,     3,     6,     7,    10,    11,     0,    12,     8,    12,
-       9,    12
+       4,     3,     6,     7,    12,    13,     0,    14,    14,    14,
+       8,     7,     9
 };
 
   /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
      symbol of state STATE-NUM.  */
 static const yytype_int8 yystos[] =
 {
-       0,     3,    14,    15,     4,     6,     7,    16,     0,    12,
-      12,    12,     8,    10,    11,     9
+       0,     3,    16,    17,     4,     6,     7,    18,    19,     0,
+      14,    14,    14,    19,     8,    12,    13,     9
 };
 
   /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_int8 yyr1[] =
 {
-       0,    13,    14,    15,    16,    16,    16,    16
+       0,    15,    16,    17,    18,    18,    19,    19,    19,    19
 };
 
   /* YYR2[YYN] -- Number of symbols on the right hand side of rule YYN.  */
 static const yytype_int8 yyr2[] =
 {
-       0,     2,     1,     2,     3,     3,     3,     3
+       0,     2,     1,     2,     2,     1,     3,     3,     3,     3
 };
 
 
@@ -1322,43 +1326,55 @@ yyreduce:
   switch (yyn)
     {
   case 2:
-#line 56 "parser.y"
+#line 61 "parser.y"
                     { root = (yyval.node); }
-#line 1328 "parser.cpp"
+#line 1332 "parser.cpp"
     break;
 
   case 3:
-#line 60 "parser.y"
-                      { (yyval.node) = new Node("MKParams", ""); (yyval.node) -> add(*(yyvsp[-1].stringVal)); }
-#line 1334 "parser.cpp"
+#line 65 "parser.y"
+                        { (yyval.node) = new Node("MKDISK", ""); (yyval.node)->add(*(yyvsp[0].node)); }
+#line 1338 "parser.cpp"
     break;
 
   case 4:
-#line 64 "parser.y"
-                                { (yyval.node) =  new Node("SIZE", (yyvsp[0].stringVal)); }
-#line 1340 "parser.cpp"
+#line 68 "parser.y"
+                                                { (yyval.node) = (yyvsp[-1].node); (yyval.node)->add(*(yyvsp[0].node)); }
+#line 1344 "parser.cpp"
     break;
 
   case 5:
-#line 65 "parser.y"
-                                { (yyval.node) =  new Node("K", (yyvsp[0].stringVal)); }
-#line 1346 "parser.cpp"
+#line 69 "parser.y"
+                                            { (yyval.node) = new Node("PARAM", ""); (yyval.node)->add(*(yyvsp[0].node)); }
+#line 1350 "parser.cpp"
     break;
 
   case 6:
-#line 66 "parser.y"
-                                { (yyval.node) =  new Node("M", (yyvsp[0].stringVal)); }
-#line 1352 "parser.cpp"
+#line 73 "parser.y"
+                                { (yyval.node) =  new Node("SIZE", (yyvsp[0].stringVal)); }
+#line 1356 "parser.cpp"
     break;
 
   case 7:
-#line 67 "parser.y"
+#line 74 "parser.y"
+                                { (yyval.node) =  new Node("K", (yyvsp[0].stringVal)); }
+#line 1362 "parser.cpp"
+    break;
+
+  case 8:
+#line 75 "parser.y"
+                                { (yyval.node) =  new Node("M", (yyvsp[0].stringVal)); }
+#line 1368 "parser.cpp"
+    break;
+
+  case 9:
+#line 76 "parser.y"
                                 { (yyval.node) =  new Node("PATH", (yyvsp[0].stringVal)); }
-#line 1358 "parser.cpp"
+#line 1374 "parser.cpp"
     break;
 
 
-#line 1362 "parser.cpp"
+#line 1378 "parser.cpp"
 
       default: break;
     }

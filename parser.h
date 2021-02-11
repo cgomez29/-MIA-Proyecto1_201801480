@@ -56,9 +56,11 @@ extern int yydebug;
     path = 262,
     v_integer = 263,
     v_string = 264,
-    k = 265,
-    m = 266,
-    equals = 267
+    id = 265,
+    route = 266,
+    k = 267,
+    m = 268,
+    equals = 269
   };
 #endif
 
@@ -66,12 +68,12 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 21 "parser.y"
+#line 23 "parser.y"
 
 char                stringVal[500];
 class Node          *node;
 
-#line 75 "parser.h"
+#line 77 "parser.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

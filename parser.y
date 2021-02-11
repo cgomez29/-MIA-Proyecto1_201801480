@@ -3,11 +3,13 @@
 #include <stdio.h>
 #include <string>
 #include "scanner.h"
-#include "node.h"
+#include "Node.h"
 
 extern int yylineno;
 extern int columna;
 extern char *yytext;
+extern Node *root;
+
 
 int yyerror(const char* msg){
         std::cout<< "Error sintáctico: " << msg << std::endl;
@@ -35,6 +37,8 @@ class Node          *node;
 // Values
 %token <stringVal> v_integer
 %token <stringVal> v_string
+%token <stringVal> id
+%token <stringVal> route
 %token <stringVal> k
 %token <stringVal> m
 
@@ -46,6 +50,7 @@ class Node          *node;
 
 %type <node> Start
 %type <node> Command
+%type <node> MKSENTENCE
 %type <node> MKParams
 
 %start Start
@@ -57,7 +62,11 @@ Start
     ;
 
 Command
-    : mkdisk MKParams { $$ = new Node("MKParams", ""); $$ -> add(*$1); }
+    : mkdisk MKSENTENCE { $$ = new Node("MKDISK", ""); $$->add(*$2); }
+    ;
+    
+MKSENTENCE :  MKSENTENCE MKParams               { $$ = $1; $$->add(*$2); }
+        | MKParams                          { $$ = new Node("PARAM", ""); $$->add(*$1); }
     ;
 
 MKParams

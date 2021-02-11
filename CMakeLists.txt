@@ -3,4 +3,4 @@ project(Proyecto1)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(Proyecto1 main.cpp Node.cpp Node.h)
+add_executable(Proyecto1 main.cpp scanner.cpp scanner.h parser.cpp parser.h Node.cpp Node.h CommandChecker.cpp CommandChecker.h)

@@ -719,7 +719,7 @@ YY_DECL
 		}
 
 	{
-#line 16 "scanner.l"
+#line 17 "scanner.l"
 
 
 #line 726 "scanner.cpp"
@@ -781,52 +781,52 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 18 "scanner.l"
+#line 19 "scanner.l"
 {}
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 20 "scanner.l"
-{ return mkdisk;}
+#line 21 "scanner.l"
+{return mkdisk;}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 22 "scanner.l"
+#line 23 "scanner.l"
 {return equals;}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 24 "scanner.l"
-{ return size; }
+#line 25 "scanner.l"
+{return size;}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 25 "scanner.l"
-{ return f; }
+#line 26 "scanner.l"
+{return f;}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 26 "scanner.l"
-{ return u; }
+#line 27 "scanner.l"
+{return u;}
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 27 "scanner.l"
-{ return path; }
+#line 28 "scanner.l"
+{return path;}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 29 "scanner.l"
-{ return m; }
+#line 30 "scanner.l"
+{return m;}
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 30 "scanner.l"
-{ return k; }
+#line 31 "scanner.l"
+{return k;}
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 32 "scanner.l"
+#line 33 "scanner.l"
 {strcpy(yylval.stringVal, yytext); return v_integer;}
 	YY_BREAK
 case 11:
@@ -838,7 +838,7 @@ YY_RULE_SETUP
 case 12:
 YY_RULE_SETUP
 #line 35 "scanner.l"
-{strcpy(yylval.stringVal, yytext); return idN;}
+{strcpy(yylval.stringVal, yytext); return id;}
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
@@ -865,16 +865,14 @@ YY_RULE_SETUP
                     }
                 }
 	YY_BREAK
-case YY_STATE_EOF(INITIAL):
-#line 45 "scanner.l"
-{ return yyterminate(); }
-	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 46 "scanner.l"
+#line 44 "scanner.l"
 ECHO;
 	YY_BREAK
-#line 878 "scanner.cpp"
+#line 874 "scanner.cpp"
+case YY_STATE_EOF(INITIAL):
+	yyterminate();
 
 	case YY_END_OF_BUFFER:
 		{
@@ -1877,5 +1875,5 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 46 "scanner.l"
+#line 44 "scanner.l"
 
