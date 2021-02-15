@@ -18,6 +18,7 @@ using namespace std;
 
 void readCommand(string input);
 void command(Node *root);
+void executeMKDISK();
 
 int main() {
     string input;
@@ -42,6 +43,33 @@ void readCommand(string input) {
 
 void command(Node *root) {
     if(root->type == "MKDISK") {
-        commandChecker->checkMKDISK(root);
+        if(commandChecker->checkMKDISK(root)) {
+            executeMKDISK();
+            return;
+        }
     }
+    cout << "Comando no valido" << endl;
+}
+
+
+struct MKDISK
+{
+    int size;
+    string f = "bf";
+    char u = 'm';
+    string path;
+};
+
+void executeMKDISK() {
+    FILE *file;
+    file = fopen("efe.dk", "wb");
+
+    char load[1024*1024];
+
+    if(file==NULL) {
+        exit(1);
+    }
+    fwrite(load, sizeof(load),1, file);
+    fclose(file);
+    cout << "ejecuntado comando." << endl ;
 }

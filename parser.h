@@ -50,17 +50,32 @@ extern int yydebug;
   enum yytokentype
   {
     mkdisk = 258,
-    size = 259,
-    f = 260,
-    u = 261,
-    path = 262,
-    v_integer = 263,
-    v_string = 264,
-    id = 265,
-    route = 266,
-    k = 267,
-    m = 268,
-    equals = 269
+    rmdisk = 259,
+    fdisk = 260,
+    size = 261,
+    f = 262,
+    u = 263,
+    path = 264,
+    type = 265,
+    p_delete = 266,
+    name = 267,
+    add = 268,
+    v_integer = 269,
+    v_string = 270,
+    id = 271,
+    route = 272,
+    k = 273,
+    m = 274,
+    b = 275,
+    bf = 276,
+    ff = 277,
+    wf = 278,
+    p = 279,
+    e = 280,
+    l = 281,
+    fast = 282,
+    full = 283,
+    equals = 284
   };
 #endif
 
@@ -73,7 +88,7 @@ union YYSTYPE
 char                stringVal[500];
 class Node          *node;
 
-#line 77 "parser.h"
+#line 92 "parser.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

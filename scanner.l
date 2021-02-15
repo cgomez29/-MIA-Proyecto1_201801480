@@ -8,7 +8,7 @@ Node *root;
 %option case-insensitive
 %option noyywrap
 
-/*REGULAR EXPRESSIONS*/
+/*Regular Expressions*/
 v_integer ("-")?[0-9]+
 id ([a-zA-Z_])[a-zA-Z0-9_]*
 route ("/"{id})+("/"{id}"."{id})
@@ -19,16 +19,30 @@ v_string ("\""[^"\""]*"\"")
 "#".*       {}
 
 "mkdisk"    {return mkdisk;}
+"rmdisk"    {return rmdisk;}
+"fdisk"    {return fdisk;}
 
 "="             {return equals;}
 
 "-size"     {return size;}
 "-f"        {return f;}
+"bf"        {return bf;}
+"ff"        {return ff;}
+"wf"        {return wf;}
 "-u"        {return u;}
-"-path"     {return path;}
-
 "m"         {return m;}
 "k"         {return k;}
+"b"         {return b;}
+"-path"     {return path;}
+"-type"     {return type;}
+"p"     {return p;}
+"e"     {return e;}
+"l"     {return l;}
+"-delete" {return p_delete;}
+"fast"  {return fast;}
+"full"  {return full;}
+"-name" {return name;}
+"-add"  {return add;}
 
 {v_integer}      {strcpy(yylval.stringVal, yytext); return v_integer;}
 {v_string}       {strcpy(yylval.stringVal, yytext); return v_string;}
