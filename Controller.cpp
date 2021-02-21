@@ -43,7 +43,7 @@ void Controller::command(Node *root) {
         }
     } else if(root->type == "FDISK") {
         if(commandChecker->checkFDISK(root)) {
-            makeRMDISK(root);
+            makeFDISK(root);
             return;
         }
     }
@@ -86,9 +86,6 @@ void Controller::executeMKDISK(MKDISK disk) {
         msj("El disco ya existe");
         return;
     }
-    file = fopen(ruta, "wb");
-    fwrite("\0", 1, 1, file);
-
     int tamano =0;
 
     if(disk.u == "k") {
@@ -99,9 +96,33 @@ void Controller::executeMKDISK(MKDISK disk) {
 
     //FALTA F
 
-    fseek(file, tamano, SEEK_SET);
-    fwrite("\0",1,1,file);
+    MBR mbr;
+    mbr.mbr_tamano = tamano;
+    mbr.mbr_disk_signature = rand()%1000;
+    mbr.mbr_fecha_creacion = time(0);
+    for (int i = 0; i < 4; ++i) {
+        mbr.mbr_partition[i].part_status = '0';
+        mbr.mbr_partition[i].part_size = 0;
+        mbr.mbr_partition[i].part_type = 'p';
+        mbr.mbr_partition[i].part_fit = 'w';
+        mbr.mbr_partition[i].part_start = 0;
+        strcpy(mbr.mbr_partition[i].part_name, "");
+    }
+
+    cout<<"Disco\nFecha de creacion: "<<asctime(gmtime(&mbr.mbr_fecha_creacion))<<endl;
+
+    char test[1024];
+
+    file = fopen(ruta, "wb");
+    for(int i=0; i < 4; i++){
+        fwrite(&test, sizeof (test), 1, file);
+    }
+    fseek(file, 0, SEEK_SET);
+    fwrite(&mbr, sizeof (MBR), 1, file);
     fclose(file);
+
+
+
     msj("Disco creado exitosamente!");
 }
 
@@ -130,6 +151,87 @@ void Controller::executeRMDISK(string path) {
             }
         }
     }
+}
+
+void Controller::makeFDISK(Node *root) {
+    list<Node> :: iterator aux;
+    aux = root->childs.begin()->childs.begin();
+    int counter = 0;
+    Partition partition;
+    string path;
+    while(counter < root->childs.begin()->count) {
+        if(aux->type == "PATH") {
+            path = aux->value;
+        } else if(aux->type == "NAME") {
+            strcpy(partition.part_name, aux->value.c_str());
+        } else if (aux->type == "SIZE") {
+            partition.part_size = stoi(aux->value);
+        } else if (aux->type == "ADD") {
+
+        } else if (aux->type == "U") {
+            if(aux->value == "b") {
+                partition.part_unit = 'b';
+            } else if(aux->value == "m") {
+                partition.part_unit = 'm';
+            } else {
+                //default k
+                partition.part_unit = 'k';
+            }
+        } else if (aux->type == "F") {
+            if(aux->value == "bf") {
+                partition.part_fit = 'b';
+            } else if(aux->value == "f") {
+                partition.part_fit = 'f';
+            } else {
+                //default w
+                partition.part_fit = 'w';
+            }
+        } else if (aux->type == "DELETE") {
+            if(aux->value == "fast") {
+
+            } else {
+                // default full
+
+            }
+        } else if (aux->type == "TYPE") {
+            if(aux->value == "e") {
+                partition.part_fit = 'e';
+            } else if(aux->value == "l") {
+                partition.part_fit = 'l';
+            } else {
+                //default P
+                partition.part_fit = 'p';
+            }
+        }
+        aux++;
+        counter++;
+    }
+
+    executeFDISK(partition, path);
+}
+
+void Controller::executeFDISK(Partition partition, string path) {
+    FILE *file;
+    file = fopen(path.c_str(), "rb+");
+
+    if(file == NULL) {
+        msj("El Disco no existe!");
+        return;
+    }
+    MBR auxDisk;
+    fseek(file,0,SEEK_SET);
+    fread(&auxDisk, sizeof(MBR), 1, file);
+
+    /*int auxSize;
+    for (int i = 0; i < 4; ++i) {
+        if(auxDisk.mbr_partition->part_status != '1') {
+            auxSize += auxDisk.mbr_partition[i].part_size;
+        }
+    }*/
+
+    msj("EEFEFEFEF0");
+    msj("tamano " + to_string(auxDisk.mbr_tamano));
+    fclose(file);
 }
 
 

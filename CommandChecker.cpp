@@ -60,6 +60,12 @@ bool CommandChecker::checkFDISK(Node *root) {
         } else if(aux->type == "NAME") {
             flagName = true;
         } else if (aux->type == "SIZE") {
+            for (char i: aux->value) {
+                if(i < '0' || i > '9'){
+                    cout << "SIZE solo acepta nùmeros positvos mayores que cero!" << endl;
+                    return false;
+                }
+            }
             flagSize = true;
         } else if (aux->type == "ADD") {
             flagAdd = true;
@@ -73,9 +79,7 @@ bool CommandChecker::checkFDISK(Node *root) {
     if(!flagName) {
         flag = false;
     }
-    if(!flagAdd) {
-        flag = false;
-    }
+
     // Command add required size
     if(flagAdd) {
         if(!flagSize) {

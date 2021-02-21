@@ -26,14 +26,37 @@ private:
         string u = "m";
         string path = "";
     };
+
+    struct Partition
+    {
+        char part_status = '0';
+        char part_type = 'p';
+        char part_fit = 'w'; //wf
+        int part_start;
+        int part_size;
+        char part_name[16];
+        char part_unit = 'k';
+    };
+
     struct MBR
     {
         int mbr_tamano;
         time_t mbr_fecha_creacion;
         int mbr_disk_signature;
         char disk_fit;
+        Partition mbr_partition[4];
+
     };
 
+    struct EBR
+    {
+        char part_status;
+        char part_fit;
+        int part_start;
+        int part_size;
+        int part_next;
+        char part_name[16];
+    };
 
     CommandChecker *commandChecker = new CommandChecker();
     void readCommand(string input);
@@ -42,8 +65,8 @@ private:
     void executeMKDISK(MKDISK disk);
     void makeRMDISK(Node *root);
     void executeRMDISK(string path);
-    void makeFDISK();
-    void executeFDISK();
+    void makeFDISK(Node *root);
+    void executeFDISK(Partition part, string path);
     static void msj(string mensaje);
 };
 

@@ -99,11 +99,11 @@ MKParams
 
 MKParam
     : size equals v_integer     { $$ =  new Node("SIZE", $3); }
-    | u equals k                { $$ =  new Node("U", $3); }
-    | u equals m                { $$ =  new Node("U", $3); }
-    | f equals bf               { $$ =  new Node("F", $3); }
-    | f equals ff               { $$ =  new Node("F", $3); }
-    | f equals wf               { $$ =  new Node("F", $3); }
+    | u equals k                { $$ =  new Node("U", "k"); }
+    | u equals m                { $$ =  new Node("U", "m"); }
+    | f equals bf               { $$ =  new Node("F", "bf"); }
+    | f equals ff               { $$ =  new Node("F", "ff"); }
+    | f equals wf               { $$ =  new Node("F", "wf"); }
     | path equals route         { $$ =  new Node("PATH", $3); }
     | path equals v_string      { $$ =  new Node("PATH", $3); }
     ;
@@ -115,19 +115,19 @@ FParams
 
 FParam 
     : size equals v_integer { $$ = new Node("SIZE", $3); }     
-    | u equals b            { $$ = new Node("U", $3); } 
-    | u equals k            { $$ = new Node("U", $3); } 
-    | u equals m            { $$ = new Node("U", $3); } 
-    | path equals route     { $$ = new Node("PATH", $3); } 
+    | u equals b            { $$ = new Node("U", "b"); }
+    | u equals k            { $$ = new Node("U", "k"); }
+    | u equals m            { $$ = new Node("U", "m"); }
+    | path equals route     { $$ = new Node("PATH", $3); }
     | path equals v_string  { $$ = new Node("PATH", $3); } 
-    | type equals p         { $$ = new Node("TYPE", $3); } 
-    | type equals e         { $$ = new Node("TYPE", $3); } 
-    | type equals l         { $$ = new Node("TYPE", $3); } 
-    | f equals bf           { $$ =  new Node("F", $3); }
-    | f equals ff           { $$ =  new Node("F", $3); }
-    | f equals wf           { $$ =  new Node("F", $3); }
-    | p_delete equals fast    { $$ =  new Node("DELETE", $3); }
-    | p_delete equals full    { $$ =  new Node("DELETE", $3); }
+    | type equals p         { $$ = new Node("TYPE", "p"); }
+    | type equals e         { $$ = new Node("TYPE", "e"); }
+    | type equals l         { $$ = new Node("TYPE", "l"); }
+    | f equals bf           { $$ =  new Node("F", "bf"); }
+    | f equals ff           { $$ =  new Node("F", "ff"); }
+    | f equals wf           { $$ =  new Node("F", "wf"); }
+    | p_delete equals fast  { $$ =  new Node("DELETE", "fast"); }
+    | p_delete equals full  { $$ =  new Node("DELETE", "full"); }
     | name equals v_string  { $$ =  new Node("NAME", $3); }
     | name equals id        { $$ =  new Node("NAME", $3); }
     | add equals v_integer  { $$ =  new Node("ADD", $3); }
