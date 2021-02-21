@@ -41,6 +41,11 @@ void Controller::command(Node *root) {
             makeRMDISK(root);
             return;
         }
+    } else if(root->type == "FDISK") {
+        if(commandChecker->checkFDISK(root)) {
+            makeRMDISK(root);
+            return;
+        }
     }
     cout << "Comando no valido" << endl;
 }

@@ -12,7 +12,7 @@ class CommandChecker {
 public:
     bool checkMKDISK(Node *root);
     bool checkRMDISK(Node *root);
-
+    bool checkFDISK(Node *root);
 };
 
 

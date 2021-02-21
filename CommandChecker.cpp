@@ -46,3 +46,41 @@ bool CommandChecker::checkRMDISK(Node *root) {
     }
     return flag;
 }
+
+bool CommandChecker::checkFDISK(Node *root) {
+    list<Node> :: iterator aux;
+    aux = root->childs.begin()->childs.begin();
+    int counter = 0;
+    bool flag = true, flagPath = false, flagName = false, flagSize = false,
+            flagAdd = false;
+
+    while(counter < root->childs.begin()->count) {
+        if(aux->type == "PATH") {
+            flagPath = true;
+        } else if(aux->type == "NAME") {
+            flagName = true;
+        } else if (aux->type == "SIZE") {
+            flagSize = true;
+        } else if (aux->type == "ADD") {
+            flagAdd = true;
+        }
+        aux++;
+        counter++;
+    }
+    if(!flagPath) {
+        flag = false;
+    }
+    if(!flagName) {
+        flag = false;
+    }
+    if(!flagAdd) {
+        flag = false;
+    }
+    // Command add required size
+    if(flagAdd) {
+        if(!flagSize) {
+            flag = false;
+        }
+    }
+    return flag;
+}

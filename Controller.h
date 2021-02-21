@@ -42,6 +42,8 @@ private:
     void executeMKDISK(MKDISK disk);
     void makeRMDISK(Node *root);
     void executeRMDISK(string path);
+    void makeFDISK();
+    void executeFDISK();
     static void msj(string mensaje);
 };
 
