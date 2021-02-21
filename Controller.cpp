@@ -14,6 +14,12 @@ void Controller::run() {
     }
 }
 
+void Controller::msj(string mensaje) {
+    cout << endl;
+    cout << mensaje << endl;
+    cout << endl;
+}
+
 void Controller::readCommand(string input) {
     if(input[0] != '#' && input.size() > 2){
         YY_BUFFER_STATE bufferState = yy_scan_string(input.c_str());
@@ -25,9 +31,14 @@ void Controller::readCommand(string input) {
 }
 
 void Controller::command(Node *root) {
-    if(root->type == "MKDISK") {
+    if(root->type == "MKDISK"){
         if(commandChecker->checkMKDISK(root)) {
             makeMKDISK(root);
+            return;
+        }
+    } else if(root->type == "RMDISK") {
+        if(commandChecker->checkRMDISK(root)) {
+            makeRMDISK(root);
             return;
         }
     }
@@ -73,7 +84,7 @@ void Controller::executeMKDISK(MKDISK disk) {
     file = fopen(ruta, "wb");
     fwrite("\0", 1, 1, file);
 
-    int tamano;
+    int tamano =0;
 
     if(disk.u == "k") {
         tamano = disk.size * 1024;
@@ -89,10 +100,35 @@ void Controller::executeMKDISK(MKDISK disk) {
     msj("Disco creado exitosamente!");
 }
 
-void Controller::msj(string mensaje) {
-    cout << endl;
-    cout << mensaje << endl;
-    cout << endl;
+void Controller::makeRMDISK(Node *root) {
+    string path = root->value;
+    executeRMDISK(path);
 }
+
+void Controller::executeRMDISK(string path) {
+    char ruta[path.size() + 1];
+    strcpy(ruta, path.c_str());
+    string input;
+    while (true) {
+        msj("Esta seguro que desea eliminar el Disco? (Y/N)");
+        cin >> input;
+        if (input == "y" || input == "Y") {
+            if (remove(ruta) != 0) {
+                msj("Error al borrar el disco!");
+            } else {
+                msj("Disco eliminado exitosamente!");
+            }
+            break;
+        } else {
+            if (input == "n" || input == "N") {
+                break;
+            }
+        }
+    }
+}
+
+
+
+
 
 

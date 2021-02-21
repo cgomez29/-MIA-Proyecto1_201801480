@@ -40,7 +40,8 @@ private:
     void command(Node *root);
     void makeMKDISK(Node *root);
     void executeMKDISK(MKDISK disk);
-
+    void makeRMDISK(Node *root);
+    void executeRMDISK(string path);
     static void msj(string mensaje);
 };
 
