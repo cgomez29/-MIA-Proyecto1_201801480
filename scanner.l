@@ -10,8 +10,8 @@ Node *root;
 
 /*Regular Expressions*/
 v_integer ("-")?[0-9]+
-id ([a-zA-Z_])[a-zA-Z0-9_]*
-route ("/"{id})+("/"{id}"."{id})
+v_id ([a-zA-Z_])[a-zA-Z0-9_]*
+route ("/"{v_id})+("/"{v_id}"."{v_id})
 v_string ("\""[^"\""]*"\"")
 
 %%
@@ -21,6 +21,7 @@ v_string ("\""[^"\""]*"\"")
 "mkdisk"    {return mkdisk;}
 "rmdisk"    {return rmdisk;}
 "fdisk"    {return fdisk;}
+"mount"    {return mount;}
 
 "="             {return equals;}
 
@@ -43,10 +44,11 @@ v_string ("\""[^"\""]*"\"")
 "full"  {return full;}
 "-name" {return name;}
 "-add"  {return add;}
+"-id"  {return id;}
 
 {v_integer}      {strcpy(yylval.stringVal, yytext); return v_integer;}
 {v_string}       {strcpy(yylval.stringVal, yytext); return v_string;}
-{id}            {strcpy(yylval.stringVal, yytext); return id;}
+{v_id}            {strcpy(yylval.stringVal, yytext); return v_id;}
 {route}         {strcpy(yylval.stringVal, yytext); return route;}
 (\s|\r|\t|\n)+   {}
 [[:blank:]]     {}

@@ -88,3 +88,26 @@ bool CommandChecker::checkFDISK(Node *root) {
     }
     return flag;
 }
+
+bool CommandChecker::checkMOUNT(Node *root) {
+    list<Node> :: iterator aux;
+    aux = root->childs.begin()->childs.begin();
+    bool flag = true, flagPath = false, flagName = false;
+    int counter = 0;
+    while(counter < root->childs.begin()->count) {
+        if(aux->type == "PATH"){
+            flagPath = true;
+        } else if (aux->type == "NAME") {
+            flagName = true;
+        }
+        aux++;
+        counter++;
+    }
+    if(!flagPath) {
+        flag = false;
+    }
+    if(!flagName) {
+        flag = false;
+    }
+    return flag;
+}

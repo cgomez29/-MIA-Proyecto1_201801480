@@ -52,30 +52,32 @@ extern int yydebug;
     mkdisk = 258,
     rmdisk = 259,
     fdisk = 260,
-    size = 261,
-    f = 262,
-    u = 263,
-    path = 264,
-    type = 265,
-    p_delete = 266,
-    name = 267,
-    add = 268,
-    v_integer = 269,
-    v_string = 270,
-    id = 271,
-    route = 272,
-    k = 273,
-    m = 274,
-    b = 275,
-    bf = 276,
-    ff = 277,
-    wf = 278,
-    p = 279,
-    e = 280,
-    l = 281,
-    fast = 282,
-    full = 283,
-    equals = 284
+    mount = 261,
+    size = 262,
+    f = 263,
+    u = 264,
+    path = 265,
+    type = 266,
+    p_delete = 267,
+    name = 268,
+    add = 269,
+    id = 270,
+    v_integer = 271,
+    v_string = 272,
+    v_id = 273,
+    route = 274,
+    k = 275,
+    m = 276,
+    b = 277,
+    bf = 278,
+    ff = 279,
+    wf = 280,
+    p = 281,
+    e = 282,
+    l = 283,
+    fast = 284,
+    full = 285,
+    equals = 286
   };
 #endif
 
@@ -88,7 +90,7 @@ union YYSTYPE
 char                stringVal[500];
 class Node          *node;
 
-#line 92 "parser.h"
+#line 94 "parser.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

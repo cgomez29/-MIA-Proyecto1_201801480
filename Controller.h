@@ -59,15 +59,22 @@ private:
     };
 
     CommandChecker *commandChecker = new CommandChecker();
+    static void msj(string mensaje);
+
     void readCommand(string input);
     void command(Node *root);
     void makeMKDISK(Node *root);
     void executeMKDISK(MKDISK disk);
     void makeRMDISK(Node *root);
     void executeRMDISK(string path);
+    //FDISK
     void makeFDISK(Node *root);
     void executeFDISK(Partition part, string path);
-    static void msj(string mensaje);
+    bool diskIsEmpty(MBR mbr);
+    bool diskNotIsEmpty(MBR mbr);
+    void createPrimaryPartition(MBR mbr, Partition part, string path);
+    void createExtendPartition(MBR mbr, Partition part, string path);
+    void createLogicPartition(MBR mbr, Partition part, string path);
 };
 
 

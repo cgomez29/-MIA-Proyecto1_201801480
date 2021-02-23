@@ -29,6 +29,7 @@ class Node          *node;
 %token <stringVal> mkdisk
 %token <stringVal> rmdisk
 %token <stringVal> fdisk
+%token <stringVal> mount
 
 // Parameters
 %token <stringVal> size
@@ -39,11 +40,12 @@ class Node          *node;
 %token <stringVal> p_delete
 %token <stringVal> name
 %token <stringVal> add
+%token <stringVal> id
 
 // Values
 %token <stringVal> v_integer
 %token <stringVal> v_string
-%token <stringVal> id
+%token <stringVal> v_id
 %token <stringVal> route
 
 // for -u
@@ -76,6 +78,8 @@ class Node          *node;
 %type <node> MKParam
 %type <node> FParams
 %type <node> FParam
+%type <node> MOUNTParams
+%type <node> MOUNTParam
 
 %start Start
 
@@ -90,6 +94,7 @@ Commands
     | rmdisk path equals route      { $$ = new Node("RMDISK", $4); }
     | rmdisk path equals v_string   { $$ = new Node("RMDISK", $4); }
     | fdisk FParams                 { $$ = new Node("FDISK", ""); $$->add(*$2); }
+    | mount MOUNTParams             { $$ = new Node("MOUNT", ""); $$->add(*$2); }
     ;
     
 MKParams 
@@ -129,6 +134,18 @@ FParam
     | p_delete equals fast  { $$ =  new Node("DELETE", "fast"); }
     | p_delete equals full  { $$ =  new Node("DELETE", "full"); }
     | name equals v_string  { $$ =  new Node("NAME", $3); }
-    | name equals id        { $$ =  new Node("NAME", $3); }
+    | name equals v_id        { $$ =  new Node("NAME", $3); }
     | add equals v_integer  { $$ =  new Node("ADD", $3); }
+    ;
+
+MOUNTParams
+    : MOUNTParams MOUNTParam
+    | MOUNTParam
+    ;
+
+MOUNTParam
+    : path equals route     { $$ = new Node("PATH", $3); }
+    | path equals v_string  { $$ = new Node("PATH", $3); }
+    | name equals v_string  { $$ =  new Node("NAME", $3); }
+    | name equals v_id        { $$ =  new Node("NAME", $3); }
     ;

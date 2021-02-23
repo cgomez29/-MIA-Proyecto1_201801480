@@ -46,6 +46,11 @@ void Controller::command(Node *root) {
             makeFDISK(root);
             return;
         }
+    } else if(root->type == "MOUNT") {
+        if(commandChecker->checkMOUNT(root)) {
+            //TODO
+            return;
+        }
     }
     cout << "Comando no valido" << endl;
 }
@@ -221,17 +226,54 @@ void Controller::executeFDISK(Partition partition, string path) {
     MBR auxDisk;
     fseek(file,0,SEEK_SET);
     fread(&auxDisk, sizeof(MBR), 1, file);
-
-    /*int auxSize;
-    for (int i = 0; i < 4; ++i) {
-        if(auxDisk.mbr_partition->part_status != '1') {
-            auxSize += auxDisk.mbr_partition[i].part_size;
-        }
-    }*/
-
-    msj("EEFEFEFEF0");
-    msj("tamano " + to_string(auxDisk.mbr_tamano));
     fclose(file);
+
+    if(diskNotIsEmpty(auxDisk)){
+        if(partition.part_type == 'p') {
+            createPrimaryPartition(auxDisk, partition, path);
+        } else if(partition.part_type == 'e') {
+            createExtendPartition(auxDisk, partition, path);
+        } else {
+            createLogicPartition(auxDisk, partition, path);
+        }
+    } else {
+        msj("Ya no se pueden realizar mas particiones!");
+    }
+}
+
+bool Controller::diskIsEmpty(Controller::MBR mbr) {
+    for (int i = 0; i < 4; ++i) {
+        if(mbr.mbr_partition->part_status == '1') {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool Controller::diskNotIsEmpty(Controller::MBR mbr) {
+    for (int i = 0; i < 4; ++i) {
+        if(mbr.mbr_partition->part_status != '1') {
+            return false;
+        }
+    }
+    return true;
+}
+
+void Controller::createPrimaryPartition(MBR mbr, Partition partition, string path) {
+    if(diskIsEmpty(mbr)){
+        partition.part_status = '1';
+        partition.part_start = 136 + partition.part_size;
+        mbr.mbr_partition[0] = partition;
+    }
+
+}
+
+void Controller::createExtendPartition(MBR mbr, Controller::Partition part, string path) {
+
+}
+
+void Controller::createLogicPartition(MBR mbr, Controller::Partition part, string path) {
+
 }
 
 
