@@ -14,6 +14,7 @@ public:
     bool checkRMDISK(Node *root);
     bool checkFDISK(Node *root);
     bool checkMOUNT(Node *root);
+    bool checkUNMOUNT(Node *root);
 
 };
 

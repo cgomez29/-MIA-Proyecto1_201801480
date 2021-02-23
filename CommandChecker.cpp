@@ -111,3 +111,11 @@ bool CommandChecker::checkMOUNT(Node *root) {
     }
     return flag;
 }
+
+bool CommandChecker::checkUNMOUNT(Node *root) {
+    bool flag = false;
+    if(root->type == "UNMOUNT") {
+        flag = true;
+    }
+    return flag;
+}

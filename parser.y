@@ -30,6 +30,7 @@ class Node          *node;
 %token <stringVal> rmdisk
 %token <stringVal> fdisk
 %token <stringVal> mount
+%token <stringVal> unmount
 
 // Parameters
 %token <stringVal> size
@@ -46,6 +47,7 @@ class Node          *node;
 %token <stringVal> v_integer
 %token <stringVal> v_string
 %token <stringVal> v_id
+%token <stringVal> v_id2
 %token <stringVal> route
 
 // for -u
@@ -95,6 +97,7 @@ Commands
     | rmdisk path equals v_string   { $$ = new Node("RMDISK", $4); }
     | fdisk FParams                 { $$ = new Node("FDISK", ""); $$->add(*$2); }
     | mount MOUNTParams             { $$ = new Node("MOUNT", ""); $$->add(*$2); }
+    | unmount id equals v_id2        { $$ = new Node("UNMOUNT", $4); }
     ;
     
 MKParams 

@@ -51,6 +51,11 @@ void Controller::command(Node *root) {
             //TODO
             return;
         }
+    } else if(root->type == "UNMOUNT") {
+        if(commandChecker->checkUNMOUNT(root)) {
+            //TODO
+            return;
+        }
     }
     cout << "Comando no valido" << endl;
 }
