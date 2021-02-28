@@ -96,18 +96,15 @@ void Controller::executeMKDISK(MKDISK disk) {
         msj("El disco ya existe");
         return;
     }
-    int tamano =0;
 
-    if(disk.u == "k") {
-        tamano = disk.size * 1024;
-    } else {
-        tamano = disk.size * 1024 * 1024;
+    if(disk.u == "m") {
+        disk.size = disk.size * 1024;
     }
 
     //FALTA F
 
     MBR mbr;
-    mbr.mbr_tamano = tamano;
+    mbr.mbr_tamano = disk.size;
     mbr.mbr_disk_signature = rand()%1000;
     mbr.mbr_fecha_creacion = time(0);
     for (int i = 0; i < 4; ++i) {
@@ -115,18 +112,20 @@ void Controller::executeMKDISK(MKDISK disk) {
         mbr.mbr_partition[i].part_size = 0;
         mbr.mbr_partition[i].part_type = 'p';
         mbr.mbr_partition[i].part_fit = 'w';
-        mbr.mbr_partition[i].part_start = 0;
+        mbr.mbr_partition[i].part_start = -1;
         strcpy(mbr.mbr_partition[i].part_name, "");
     }
 
     cout<<"Disco\nFecha de creacion: "<<asctime(gmtime(&mbr.mbr_fecha_creacion))<<endl;
+    cout<<"Tamaño: "<< mbr.mbr_tamano << disk.u << "b" <<endl;
 
     char test[1024];
 
     file = fopen(ruta, "wb");
-    for(int i=0; i < 4; i++){
+    for(int i=0; i < disk.size; i++){
         fwrite(&test, sizeof (test), 1, file);
     }
+
     fseek(file, 0, SEEK_SET);
     fwrite(&mbr, sizeof (MBR), 1, file);
     fclose(file);
@@ -190,10 +189,10 @@ void Controller::makeFDISK(Node *root) {
         } else if (aux->type == "F") {
             if(aux->value == "bf") {
                 partition.part_fit = 'b';
-            } else if(aux->value == "f") {
+            } else if(aux->value == "ff") {
                 partition.part_fit = 'f';
             } else {
-                //default w
+                //default wf
                 partition.part_fit = 'w';
             }
         } else if (aux->type == "DELETE") {
@@ -233,29 +232,18 @@ void Controller::executeFDISK(Partition partition, string path) {
     fread(&auxDisk, sizeof(MBR), 1, file);
     fclose(file);
 
-    if(diskNotIsEmpty(auxDisk)){
-        if(partition.part_type == 'p') {
+    if(partition.part_type == 'p') {
             createPrimaryPartition(auxDisk, partition, path);
-        } else if(partition.part_type == 'e') {
+    } else if(partition.part_type == 'e') {
             createExtendPartition(auxDisk, partition, path);
-        } else {
-            createLogicPartition(auxDisk, partition, path);
-        }
-    } else {
-        msj("Ya no se pueden realizar mas particiones!");
+    } else if (partition.part_type == 'l') {
+        createLogicPartition(auxDisk, partition, path);
     }
-}
 
-bool Controller::diskIsEmpty(Controller::MBR mbr) {
-    for (int i = 0; i < 4; ++i) {
-        if(mbr.mbr_partition->part_status == '1') {
-            return false;
-        }
-    }
-    return true;
 }
 
 bool Controller::diskNotIsEmpty(Controller::MBR mbr) {
+    //checking available partition
     for (int i = 0; i < 4; ++i) {
         if(mbr.mbr_partition->part_status != '1') {
             return false;
@@ -264,13 +252,73 @@ bool Controller::diskNotIsEmpty(Controller::MBR mbr) {
     return true;
 }
 
+int Controller::firstFit(MBR mbr, int size) {
+    for (int i = 0; i < 4; ++i) {
+        if(mbr.mbr_partition[i].part_start == -1) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 void Controller::createPrimaryPartition(MBR mbr, Partition partition, string path) {
-    if(diskIsEmpty(mbr)){
-        partition.part_status = '1';
-        partition.part_start = 136 + partition.part_size;
-        mbr.mbr_partition[0] = partition;
+
+    FILE *file;
+
+    file = fopen(path.c_str(), "rb+");
+
+    if(file == NULL) {
+        msj("El Disco no existe!");
+        return;
     }
 
+    int sizeUsed = 0;
+    bool flagName = true;
+
+    for (int i = 0; i < 4; ++i) {
+        if(mbr.mbr_partition[i].part_status == '1') {
+            sizeUsed = sizeUsed + mbr.mbr_partition[i].part_size;
+        }
+        if(mbr.mbr_partition[i].part_name == partition.part_name) {
+            flagName = false;
+            break;
+        }
+    }
+
+    if(!flagName) {
+        msj("El nombre de la particion a crear ya existe!");
+        return;
+    }
+
+
+    if((mbr.mbr_tamano - sizeUsed) >= partition.part_size ) {
+        int index = 0;
+        if(partition.part_fit == 'f') {
+            index  = firstFit(mbr, size);
+        }
+
+        partition.part_status = '1';
+        if(index == 0) {
+            partition.part_start = sizeof(MBR);
+        } else {
+            partition.part_start = mbr.mbr_partition[index-1].part_start + mbr.mbr_partition[index-1].part_size;
+        }
+        mbr.mbr_partition[index] = partition;
+
+
+
+        fseek(file, 0, SEEK_SET);
+        fwrite(&mbr,sizeof(MBR), 1, file);
+        char test = '1';
+        fseek(file, partition.part_start, SEEK_SET);
+        for (int i = 0; i < partition.part_size; ++i) {
+            fwrite(&test, 1, 1, file);
+        }
+        fclose(file);
+        msj("Particiòn Creada exitosamente!");
+    } else {
+        msj("No hay espacio suficiente para crear la nueva particiòn!");
+    }
 }
 
 void Controller::createExtendPartition(MBR mbr, Controller::Partition part, string path) {

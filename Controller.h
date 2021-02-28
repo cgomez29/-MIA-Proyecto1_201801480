@@ -72,6 +72,10 @@ private:
     void executeFDISK(Partition part, string path);
     bool diskIsEmpty(MBR mbr);
     bool diskNotIsEmpty(MBR mbr);
+    int firstFit(MBR mbr, int size);
+    void bestFit(MBR mbr, int size);
+    void worstFit(MBR mbr, int size);
+
     void createPrimaryPartition(MBR mbr, Partition part, string path);
     void createExtendPartition(MBR mbr, Partition part, string path);
     void createLogicPartition(MBR mbr, Partition part, string path);
