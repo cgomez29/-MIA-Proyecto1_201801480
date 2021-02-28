@@ -252,11 +252,46 @@ bool Controller::diskNotIsEmpty(Controller::MBR mbr) {
     return true;
 }
 
-int Controller::firstFit(MBR mbr, int size) {
+int Controller::firstFit(MBR mbr) {
     for (int i = 0; i < 4; ++i) {
         if(mbr.mbr_partition[i].part_start == -1) {
             return i;
         }
+    }
+    return -1;
+}
+
+int Controller::bestFit(MBR mbr) {
+    int aux = 0;
+    bool flag = false;
+    for (int i = 0; i < 4; ++i) {
+        if(mbr.mbr_partition[i].part_start == -1) {
+            flag = true;
+            if(aux != i && mbr.mbr_partition[aux].part_size > mbr.mbr_partition[i].part_size) {
+                aux = i;
+            }
+        }
+    }
+
+    if(flag) {
+        return aux;
+    }
+    return -1;
+}
+
+int Controller::worstFit(MBR mbr) {
+    int aux = 0;
+    bool flag = false;
+    for (int i = 0; i < 4; ++i) {
+        if(mbr.mbr_partition[i].part_start == -1) {
+            flag = true;
+            if(aux != i && mbr.mbr_partition[aux].part_size < mbr.mbr_partition[i].part_size) {
+                aux = i;
+            }
+        }
+    }
+    if(flag) {
+        return aux;
     }
     return -1;
 }
@@ -294,7 +329,11 @@ void Controller::createPrimaryPartition(MBR mbr, Partition partition, string pat
     if((mbr.mbr_tamano - sizeUsed) >= partition.part_size ) {
         int index = 0;
         if(partition.part_fit == 'f') {
-            index  = firstFit(mbr, size);
+            index  = firstFit(mbr);
+        } else if(partition.part_fit == 'b') {
+            index = bestFit(mbr);
+        } else if(partition.part_fit == 'w') {
+            index = worstFit(mbr);
         }
 
         partition.part_status = '1';
