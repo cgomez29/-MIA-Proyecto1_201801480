@@ -35,7 +35,6 @@ private:
         int part_start;
         int part_size;
         char part_name[16];
-        char part_unit = 'k';
     };
 
     struct MBR
@@ -69,16 +68,16 @@ private:
     void executeRMDISK(string path);
     //FDISK
     void makeFDISK(Node *root);
-    void executeFDISK(Partition part, string path);
+    void executeFDISK(string path, char type, char fit, int size, char name[16], char unit, int add, string cDelete);
     bool diskIsEmpty(MBR mbr);
     bool diskNotIsEmpty(MBR mbr);
     int firstFit(MBR mbr);
     int bestFit(MBR mbr);
     int worstFit(MBR mbr);
 
-    void createPrimaryPartition(MBR mbr, Partition part, string path);
-    void createExtendPartition(MBR mbr, Partition part, string path);
-    void createLogicPartition(MBR mbr, Partition part, string path);
+    void createPrimaryPartition(MBR mbr, string path, char fit, int size, char name[16], char unit);
+    void createExtendPartition(MBR mbr, string path, char fit, int size, char name[16], char unit);
+    void createLogicPartition(MBR mbr, string path, char fit, int size, char name[16], char unit);
 };
 
 
