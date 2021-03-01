@@ -8,8 +8,8 @@
 #include <iostream>
 #include <fstream>
 #include "Node.h"
-#include "parser.h"
-#include "scanner.h"
+#include "../Analizador/parser.h"
+#include "../Analizador/scanner.h"
 #include "CommandChecker.h"
 extern Node * root;
 
@@ -69,8 +69,6 @@ private:
     //FDISK
     void makeFDISK(Node *root);
     void executeFDISK(string path, char type, char fit, int size, char name[16], char unit, int add, string cDelete);
-    bool diskIsEmpty(MBR mbr);
-    bool diskNotIsEmpty(MBR mbr);
     int firstFit(MBR mbr);
     int bestFit(MBR mbr);
     int worstFit(MBR mbr);

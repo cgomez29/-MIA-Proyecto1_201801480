@@ -72,7 +72,7 @@
 #include <stdio.h>
 #include <string>
 #include "scanner.h"
-#include "Node.h"
+#include "../Headers/Node.h"
 
 extern int yylineno;
 extern int columna;

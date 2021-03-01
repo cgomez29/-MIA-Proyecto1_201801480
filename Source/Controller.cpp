@@ -2,7 +2,7 @@
 // Created by cgomez on 20/02/21.
 //
 
-#include "Controller.h"
+#include "../Headers/Controller.h"
 
 void Controller::run() {
     string input;
@@ -248,16 +248,6 @@ void Controller::executeFDISK(string path, char type, char fit, int size, char n
         createLogicPartition(auxDisk, path, fit, size, name, unit);
     }
 
-}
-
-bool Controller::diskNotIsEmpty(Controller::MBR mbr) {
-    //checking available partition
-    for (int i = 0; i < 4; ++i) {
-        if(mbr.mbr_partition->part_status != '1') {
-            return false;
-        }
-    }
-    return true;
 }
 
 int Controller::firstFit(MBR mbr) {

@@ -2,7 +2,7 @@
 // Created by cgomez on 11/02/21.
 //
 
-#include "Node.h"
+#include "../Headers/Node.h"
 
 
 Node::Node(string _type, char _value[])
