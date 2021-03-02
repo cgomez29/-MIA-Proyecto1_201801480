@@ -98,6 +98,7 @@ Commands
     | fdisk FParams                 { $$ = new Node("FDISK", ""); $$->add(*$2); }
     | mount MOUNTParams             { $$ = new Node("MOUNT", ""); $$->add(*$2); }
     | unmount id equals v_id2        { $$ = new Node("UNMOUNT", $4); }
+    | unmount id equals v_string        { $$ = new Node("UNMOUNT", $4); }
     ;
     
 MKParams 

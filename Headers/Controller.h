@@ -11,6 +11,8 @@
 #include "../Analizador/parser.h"
 #include "../Analizador/scanner.h"
 #include "CommandChecker.h"
+#include "SimpleList.h"
+
 extern Node * root;
 
 using namespace std;
@@ -58,6 +60,8 @@ private:
     };
 
     CommandChecker *commandChecker = new CommandChecker();
+    SimpleList *listMount = new SimpleList();
+
     static void msj(string mensaje);
 
     void readCommand(string input);
@@ -72,10 +76,13 @@ private:
     int firstFit(MBR mbr);
     int bestFit(MBR mbr);
     int worstFit(MBR mbr);
-
     void createPrimaryPartition(MBR mbr, string path, char fit, int size, char name[16], char unit);
     void createExtendPartition(MBR mbr, string path, char fit, int size, char name[16], char unit);
     void createLogicPartition(MBR mbr, string path, char fit, int size, char name[16], char unit);
+    void makeMount(Node *root);
+    void executeMount(string path, string name);
+    void makeUnMount(Node *root);
+    void executeUnMount(string id);
 };
 
 

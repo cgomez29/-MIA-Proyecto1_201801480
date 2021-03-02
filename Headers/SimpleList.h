@@ -12,8 +12,10 @@ private:
     Mount *head;
     Mount *tail;
 public:
-    void add(string _id, string _path, string _name);
+    SimpleList();
+    void add(string id, string path, string name);
     void printList();
+    void unMount(string id);
 };
 
 

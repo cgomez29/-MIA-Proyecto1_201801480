@@ -48,7 +48,7 @@ void Controller::command(Node *root) {
         }
     } else if(root->type == "MOUNT") {
         if(commandChecker->checkMOUNT(root)) {
-            //TODO
+            makeMount(root);
             return;
         }
     } else if(root->type == "UNMOUNT") {
@@ -369,7 +369,7 @@ void Controller::createExtendPartition(MBR mbr, string path, char fit, int size,
         return;
     }
 
-    int sizeUsed = 0;
+    int sizeUsed = 0; /* Size used for partitions */
     bool flagName = true;
 
     for (int i = 0; i < 4; ++i) {
@@ -505,8 +505,41 @@ void Controller::createLogicPartition(MBR mbr, string path, char fit, int size, 
     }
 }
 
+void Controller::makeMount(Node *root) {
+    list<Node> :: iterator aux;
+    aux = root->childs.begin()->childs.begin();
+    int counter = 0;
+    string path;
+    string name;
+    while(counter < root->childs.begin()->count){
+        if(aux->type == "PATH"){
+            path = aux->value;
+        } else if (aux->type == "NAME") {
+            name = aux->value;
+        }
+        aux++;
+        counter++;
+    }
+    executeMount(path, name);
+}
 
+/**
+ *  Mount partitions
+ * */
+void Controller::executeMount(string path, string name) {
+    string id = 80 + "";
+    listMount->add(id, path, name);
+}
 
+void Controller::makeUnMount(Node *root) {
+    string id = "";
+    if(root->type == "UNMOUNT") {
+        id = root->value;
+    }
+    executeUnMount(id);
+}
 
-
-
+void Controller::executeUnMount(string id) {
+    // DELETE mount of list simple
+    listMount->unMount(id);
+}
