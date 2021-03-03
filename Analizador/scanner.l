@@ -24,6 +24,7 @@ v_string ("\""[^"\""]*"\"")
 "fdisk"    {return fdisk;}
 "mount"    {return mount;}
 "unmount"    {return unmount;}
+"mkfs"      {return mkfs;}
 
 "="             {return equals;}
 
@@ -47,6 +48,9 @@ v_string ("\""[^"\""]*"\"")
 "-name" {return name;}
 "-add"  {return add;}
 "-id"  {return id;}
+"-fs" {return fs;}
+"2fs" {return dosfs;}
+"3fs" {return tresfs;}
 
 {v_integer}      {strcpy(yylval.stringVal, yytext); return v_integer;}
 {v_string}       {strcpy(yylval.stringVal, yytext); return v_string;}

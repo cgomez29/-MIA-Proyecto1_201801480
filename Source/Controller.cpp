@@ -98,7 +98,10 @@ void Controller::executeMKDISK(MKDISK disk) {
     }
 
     if(disk.u == "m") {
-        disk.size = disk.size * 1024;
+        disk.size = disk.size * 1024 * 1024;
+    } else {
+        // kilobytes (k)
+        disk.size = disk.size * 1024 ;
     }
 
     //FALTA F
@@ -239,6 +242,13 @@ void Controller::executeFDISK(string path, char type, char fit, int size, char n
     fseek(file,0,SEEK_SET);
     fread(&auxDisk, sizeof(MBR), 1, file);
     fclose(file);
+
+    // bytes
+    if(unit == 'k') {
+        size = size * 1024;
+    } else if (unit == 'm') {
+        size = size * 1024 * 1024;
+    }
 
     if(type == 'p') {
         createPrimaryPartition(auxDisk, path, fit, size, name, unit);
@@ -463,6 +473,11 @@ void Controller::createLogicPartition(MBR mbr, string path, char fit, int size, 
         return;
     }
 
+    // Checking space available
+    if(size <= mbr.mbr_partition[index].part_size) {
+        return;
+    }
+
     EBR auxEBR;
     fseek(file, mbr.mbr_partition[index].part_start, SEEK_SET);
     fread(&auxEBR, sizeof(EBR),1, file);
@@ -472,7 +487,7 @@ void Controller::createLogicPartition(MBR mbr, string path, char fit, int size, 
         auxEBR.part_fit = fit;
         auxEBR.part_start = mbr.mbr_partition[index].part_start;
         auxEBR.part_size = size;
-        auxEBR.part_next =  mbr.mbr_partition[index].part_start + size;
+        auxEBR.part_next =  mbr.mbr_partition[index].part_start + sizeof(EBR) + size;
         strcpy(auxEBR.part_name, name);
 
         char test = '1';
@@ -483,23 +498,34 @@ void Controller::createLogicPartition(MBR mbr, string path, char fit, int size, 
         }
         fclose(file);
     } else {
+        /* Recorre hasta encontrar la ultima particion logica */
+        bool checkName = true;
         while(auxEBR.part_next != -1) {
+            if(strcmp(auxEBR.part_name, name) == 0){
+                checkName = false;
+                break;
+            }
             fseek(file, auxEBR.part_start + auxEBR.part_size, SEEK_SET);
             fread(&auxEBR, sizeof(EBR),1, file);
         }
-        EBR ebr;
-        ebr.part_status = '1';
-        ebr.part_fit = fit;
-        ebr.part_start = auxEBR.part_next;
-        ebr.part_size = size;
-        ebr.part_next = -1;
-        strcpy(ebr.part_name, name);
 
-        char test = '1';
-        fseek(file, ebr.part_start, SEEK_SET);
-        fwrite(&ebr,sizeof(EBR), 1, file);
-        for (int i = 0; i < (ebr.part_size - (int) sizeof(EBR)); ++i) {
-            fwrite(&test, 1, 1, file);
+        if(checkName) { /* Checking name unique */
+            EBR ebr;
+            ebr.part_status = '1';
+            ebr.part_fit = fit;
+            ebr.part_start = auxEBR.part_next;
+            ebr.part_size = size;
+            ebr.part_next = -1;
+            strcpy(ebr.part_name, name);
+
+            char test = '1';
+            fseek(file, ebr.part_start, SEEK_SET);
+            fwrite(&ebr,sizeof(EBR), 1, file);
+            for (int i = 0; i < (ebr.part_size - (int) sizeof(EBR)); ++i) {
+                fwrite(&test, 1, 1, file);
+            }
+        } else {
+            msj(string("El nombre: '") + name + "' de la particion lógica a crear ya existe");
         }
         fclose(file);
     }

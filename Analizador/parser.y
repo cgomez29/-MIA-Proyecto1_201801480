@@ -31,6 +31,7 @@ class Node          *node;
 %token <stringVal> fdisk
 %token <stringVal> mount
 %token <stringVal> unmount
+%token <stringVal> mkfs
 
 // Parameters
 %token <stringVal> size
@@ -42,6 +43,7 @@ class Node          *node;
 %token <stringVal> name
 %token <stringVal> add
 %token <stringVal> id
+%token <stringVal> fs
 
 // Values
 %token <stringVal> v_integer
@@ -69,6 +71,10 @@ class Node          *node;
 %token <stringVal> fast
 %token <stringVal> full
 
+// for fs
+%token <stringVal> dosfs
+%token <stringVal> tresfs
+
 // Symbols
 %token <stringVal> equals
 
@@ -82,6 +88,8 @@ class Node          *node;
 %type <node> FParam
 %type <node> MOUNTParams
 %type <node> MOUNTParam
+%type <node> MKFSParams
+%type <node> MKFSParam
 
 %start Start
 
@@ -97,8 +105,9 @@ Commands
     | rmdisk path equals v_string   { $$ = new Node("RMDISK", $4); }
     | fdisk FParams                 { $$ = new Node("FDISK", ""); $$->add(*$2); }
     | mount MOUNTParams             { $$ = new Node("MOUNT", ""); $$->add(*$2); }
-    | unmount id equals v_id2        { $$ = new Node("UNMOUNT", $4); }
-    | unmount id equals v_string        { $$ = new Node("UNMOUNT", $4); }
+    | unmount id equals v_id2       { $$ = new Node("UNMOUNT", $4); }
+    | unmount id equals v_string    { $$ = new Node("UNMOUNT", $4); }
+    | mkfs MKFSParams               { $$ = new Node("MKFS", ""); $$->add(*$2); }
     ;
     
 MKParams 
@@ -138,13 +147,13 @@ FParam
     | p_delete equals fast  { $$ =  new Node("DELETE", "fast"); }
     | p_delete equals full  { $$ =  new Node("DELETE", "full"); }
     | name equals v_string  { $$ =  new Node("NAME", $3); }
-    | name equals v_id        { $$ =  new Node("NAME", $3); }
+    | name equals v_id      { $$ =  new Node("NAME", $3); }
     | add equals v_integer  { $$ =  new Node("ADD", $3); }
     ;
 
 MOUNTParams
-    : MOUNTParams MOUNTParam
-    | MOUNTParam
+    : MOUNTParams MOUNTParam { $$ = $1; $$->add(*$2); }
+    | MOUNTParam             { $$ =  new Node ("PARAM", ""); $$->add(*$1); }
     ;
 
 MOUNTParam
@@ -152,4 +161,18 @@ MOUNTParam
     | path equals v_string  { $$ = new Node("PATH", $3); }
     | name equals v_string  { $$ =  new Node("NAME", $3); }
     | name equals v_id        { $$ =  new Node("NAME", $3); }
+    ;
+
+MKFSParams
+    : MKFSParams MKFSParam { $$ = $1; $$->add(*$2); }
+    | MKFSParam            { $$ =  new Node ("PARAM", ""); $$->add(*$1); }
+    ;
+
+MKFSParam
+    : id equals v_id2 { $$ = new Node("ID", $3); }
+    | id equals v_string { $$ = new Node("ID", $3); }
+    | type equals fast { $$ = new Node("TYPE", $3); }
+    | type equals full { $$ = new Node("TYPE", $3); }
+    | fs equals dosfs { $$ = new Node("FS", "2fs"); }
+    | fs equals tresfs { $$ = new Node("FS", "3fs"); }
     ;
