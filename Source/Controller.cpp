@@ -56,6 +56,11 @@ void Controller::command(Node *root) {
             //TODO
             return;
         }
+    } else if(root->type == "REP") {
+        if(commandChecker->checkREP(root)) {
+            executeREP();
+            return;
+        }
     }
     cout << "Comando no valido" << endl;
 }
@@ -641,66 +646,44 @@ void Controller::executeUnMount(string id) {
     listMount->unMount(id);
 }
 
-void Controller::generateDOT() {
-    FILE *filee;
-    fopen("/home/cgomez/Escritorio/Disco1.dk", "rb+");
+/**
+ * REPORTS
+ * */
 
-    MBR mbr;
-    fseek(filee, 0, SEEK_SET);
-    fread(&mbr, sizeof(MBR),1, filee);
-
-    string cadena = "digraph a {\n"
-                    "    rankdir=LR\n"
-                    "    node [shape=plaintext]\n"
-                    "    \n"
-                    "    a [label=<\n"
-                    "<TABLE BORDER=\"2\" CELLBORDER=\"1\" CELLSPACING=\"5\" CELLPADDING=\"5\">\n"
-                    "  <TR>\n"
-                    "    <TD ROWSPAN=\"3\" WIDTH=\"10\">MBR</TD>\n";
-
-
-    for (int i = 0; i < 4; ++i) {
-        if(mbr.mbr_partition[i].part_status == '1'){
-            if(mbr.mbr_partition[i].part_type == 'e'){
-                cadena+=     "    <TD COLSPAN=\"3\" WIDTH=\"10\">\n"
-                             "        Extendida\n"
-                             "    </TD>\n"
-                             "  </TR>\n"
-                             "  \n";
-
-                EBR auxEBR;
-                fseek(filee, mbr.mbr_partition[i].part_start, SEEK_SET);
-                fread(&auxEBR, sizeof(EBR), 1, filee);
-
-                while(auxEBR.part_next != -1){
-                    cadena+= "  <TR >\n"
-                             "    <TD >Lógica</TD>\n"
-                             "  </TR>\n";
-                }
-            } else {
-                cadena += "    <TD ROWSPAN=\"3\" WIDTH=\"10\">"+ string(mbr.mbr_partition[i].part_name) +"</TD>\n";
-            }
+void Controller::executeREP() {
+    list<Node> :: iterator aux;
+    aux = root->childs.begin()->childs.begin();
+    int counter = 0;
+    string name;
+    string id;
+    string path;
+    string ruta;
+    while(counter < root->childs.begin()->count) {
+        if(aux->type == "NAME"){
+            name = aux->value;
+        } else if(aux->type == "PATH"){
+            path = aux->value;
+        } else if(aux->type == "ID"){
+            id = aux->value;
+        } else if(aux->type == "RUTA"){
+            ruta = aux->value;
         }
+        aux++;
+        counter++;
     }
-
-        cadena +="  \n"
-                    "\n"
-                    "</TABLE>>];\n"
-                    "\n"
-                    "\n"
-                    "}";
-
-    string comando = "dot -Tpng  MBR.dot -o MBR.png";
-    string path = "MBR.png";
-
-    ofstream file("MBR.dot");
-    file << cadena.c_str();
-    file.close();
-
-    //cerrando archivo de prueba
-    fclose(filee);
-
-    system(comando.c_str());
-    system(path.c_str());
-
+    if(aux->value == "MBR" || aux->value == "mbr"){
+        controllerReport->reportMBR(id,path);
+    } else if(aux->value == "DISK" || aux->value == "disk"){
+    } else if(aux->value == "INODE" || aux->value == "inode"){
+    } else if(aux->value == "Journaling" || aux->value == "journaling"){
+    } else if(aux->value == "BLOCK" || aux->value == "block"){
+    } else if(aux->value == "bm_inode" || aux->value == "BM_INODE"){
+    } else if(aux->value == "bm_block" || aux->value == "BM_BLOCK"){
+    } else if(aux->value == "tree" || aux->value == "TREE"){
+    } else if(aux->value == "sb" || aux->value == "SB"){
+    } else if(aux->value == "file" || aux->value == "FILE"){
+    } else if(aux->value == "ls" || aux->value == "ls"){
+    }
 }
+
+

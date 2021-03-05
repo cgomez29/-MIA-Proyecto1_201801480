@@ -14,6 +14,7 @@
 #include "../Analizador/scanner.h"
 #include "CommandChecker.h"
 #include "SimpleList.h"
+#include "ControllerReport.h"
 
 extern Node * root;
 
@@ -22,7 +23,6 @@ using namespace std;
 class Controller {
 public:
     void run();
-    void generateDOT();
 
 private:
     struct MKDISK
@@ -64,6 +64,7 @@ private:
     };
 
     CommandChecker *commandChecker = new CommandChecker();
+    ControllerReport *controllerReport = new ControllerReport();
     SimpleList *listMount = new SimpleList();
 
     static void msj(string mensaje);
@@ -90,6 +91,11 @@ private:
     void executeMount(string path, string name);
     void makeUnMount(Node *root);
     void executeUnMount(string id);
+
+
+    /*REPORTS*/
+    void executeREP();
+
 
 };
 

@@ -19,12 +19,13 @@ v_string ("\""[^"\""]*"\"")
 
 "#".*       {}
 
-"mkdisk"    {return mkdisk;}
-"rmdisk"    {return rmdisk;}
+"mkdisk"   {return mkdisk;}
+"rmdisk"   {return rmdisk;}
 "fdisk"    {return fdisk;}
 "mount"    {return mount;}
-"unmount"    {return unmount;}
-"mkfs"      {return mkfs;}
+"unmount"  {return unmount;}
+"mkfs"     {return mkfs;}
+"rep"      {return rep;}
 
 "="             {return equals;}
 
@@ -51,6 +52,7 @@ v_string ("\""[^"\""]*"\"")
 "-fs" {return fs;}
 "2fs" {return dosfs;}
 "3fs" {return tresfs;}
+"-ruta" {return ruta;}
 
 {v_integer}      {strcpy(yylval.stringVal, yytext); return v_integer;}
 {v_string}       {strcpy(yylval.stringVal, yytext); return v_string;}

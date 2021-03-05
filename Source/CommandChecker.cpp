@@ -119,3 +119,51 @@ bool CommandChecker::checkUNMOUNT(Node *root) {
     }
     return flag;
 }
+
+bool CommandChecker::checkREP(Node *root) {
+    list<Node> :: iterator aux;
+    aux = root->childs.begin()->childs.begin();
+    bool flag = false;
+    int counter = 0;
+    while(counter < root->childs.begin()->count) {
+        if(aux->type == "NAME"){
+            if(aux->value == "MBR" || aux->value == "mbr"){
+                flag= true;
+                break;
+            } else if(aux->value == "DISK" || aux->value == "disk"){
+                flag= true;
+                break;
+            } else if(aux->value == "INODE" || aux->value == "inode"){
+                flag= true;
+                break;
+            } else if(aux->value == "Journaling" || aux->value == "journaling"){
+                flag= true;
+                break;
+            } else if(aux->value == "BLOCK" || aux->value == "block"){
+                flag= true;
+                break;
+            } else if(aux->value == "bm_inode" || aux->value == "BM_INODE"){
+                flag= true;
+                break;
+            } else if(aux->value == "bm_block" || aux->value == "BM_BLOCK"){
+                flag= true;
+                break;
+            } else if(aux->value == "tree" || aux->value == "TREE"){
+                flag= true;
+                break;
+            } else if(aux->value == "sb" || aux->value == "SB"){
+                flag= true;
+                break;
+            } else if(aux->value == "file" || aux->value == "FILE"){
+                flag= true;
+                break;
+            } else if(aux->value == "ls" || aux->value == "ls"){
+                flag= true;
+                break;
+            }
+        }
+        aux++;
+        counter++;
+    }
+    return flag;
+}

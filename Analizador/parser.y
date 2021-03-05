@@ -32,6 +32,7 @@ class Node          *node;
 %token <stringVal> mount
 %token <stringVal> unmount
 %token <stringVal> mkfs
+%token <stringVal> rep
 
 // Parameters
 %token <stringVal> size
@@ -44,6 +45,7 @@ class Node          *node;
 %token <stringVal> add
 %token <stringVal> id
 %token <stringVal> fs
+%token <stringVal> ruta
 
 // Values
 %token <stringVal> v_integer
@@ -90,6 +92,8 @@ class Node          *node;
 %type <node> MOUNTParam
 %type <node> MKFSParams
 %type <node> MKFSParam
+%type <node> REPParams
+%type <node> REPParam
 
 %start Start
 
@@ -108,6 +112,7 @@ Commands
     | unmount id equals v_id2       { $$ = new Node("UNMOUNT", $4); }
     | unmount id equals v_string    { $$ = new Node("UNMOUNT", $4); }
     | mkfs MKFSParams               { $$ = new Node("MKFS", ""); $$->add(*$2); }
+    | rep REPParams               { $$ = new Node("REP", ""); $$->add(*$2); }
     ;
     
 MKParams 
@@ -171,8 +176,24 @@ MKFSParams
 MKFSParam
     : id equals v_id2 { $$ = new Node("ID", $3); }
     | id equals v_string { $$ = new Node("ID", $3); }
-    | type equals fast { $$ = new Node("TYPE", $3); }
+    | Rtype equals fast { $$ = new Node("TYPE", $3); }
     | type equals full { $$ = new Node("TYPE", $3); }
     | fs equals dosfs { $$ = new Node("FS", "2fs"); }
     | fs equals tresfs { $$ = new Node("FS", "3fs"); }
+    ;
+
+REPParams
+    : REPParams REPParam { $$ = $1; $$->add(*$2); }
+    | REPParam            { $$ =  new Node ("PARAM", ""); $$->add(*$1); }
+    ;
+
+REPParam
+    : path equals route     { $$ = new Node("PATH", $3); }
+    | path equals v_string  { $$ = new Node("PATH", $3); }
+    | id equals v_id2 { $$ = new Node("ID", $3); }
+    | id equals v_string { $$ = new Node("ID", $3); }
+    | name equals v_id       { $$ =  new Node("NAME", $3); }
+    | name equals v_string  { $$ =  new Node("NAME", $3); }
+    | ruta equals v_id       { $$ =  new Node("RUTA", $3); }
+    | ruta equals v_string  { $$ =  new Node("RUTA", $3); }
     ;

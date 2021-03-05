@@ -16,6 +16,7 @@ public:
     bool checkMOUNT(Node *root);
     bool checkUNMOUNT(Node *root);
 
+    bool checkREP(Node *root);
 };
 
 

@@ -55,35 +55,37 @@ extern int yydebug;
     mount = 261,
     unmount = 262,
     mkfs = 263,
-    size = 264,
-    f = 265,
-    u = 266,
-    path = 267,
-    type = 268,
-    p_delete = 269,
-    name = 270,
-    add = 271,
-    id = 272,
-    fs = 273,
-    v_integer = 274,
-    v_string = 275,
-    v_id = 276,
-    v_id2 = 277,
-    route = 278,
-    k = 279,
-    m = 280,
-    b = 281,
-    bf = 282,
-    ff = 283,
-    wf = 284,
-    p = 285,
-    e = 286,
-    l = 287,
-    fast = 288,
-    full = 289,
-    dosfs = 290,
-    tresfs = 291,
-    equals = 292
+    rep = 264,
+    size = 265,
+    f = 266,
+    u = 267,
+    path = 268,
+    type = 269,
+    p_delete = 270,
+    name = 271,
+    add = 272,
+    id = 273,
+    fs = 274,
+    ruta = 275,
+    v_integer = 276,
+    v_string = 277,
+    v_id = 278,
+    v_id2 = 279,
+    route = 280,
+    k = 281,
+    m = 282,
+    b = 283,
+    bf = 284,
+    ff = 285,
+    wf = 286,
+    p = 287,
+    e = 288,
+    l = 289,
+    fast = 290,
+    full = 291,
+    dosfs = 292,
+    tresfs = 293,
+    equals = 294
   };
 #endif
 
@@ -96,7 +98,7 @@ union YYSTYPE
 char                stringVal[500];
 class Node          *node;
 
-#line 100 "parser.h"
+#line 102 "parser.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
