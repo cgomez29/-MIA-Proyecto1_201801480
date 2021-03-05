@@ -7,6 +7,7 @@ int main() {
     Controller *controller = new Controller();
     controller->run();
 
+    //controller->generateDOT();
     /*SimpleList *s = new SimpleList();
 
     s->add("f", "f/efe", "efe");

@@ -160,7 +160,7 @@ MOUNTParam
     : path equals route     { $$ = new Node("PATH", $3); }
     | path equals v_string  { $$ = new Node("PATH", $3); }
     | name equals v_string  { $$ =  new Node("NAME", $3); }
-    | name equals v_id        { $$ =  new Node("NAME", $3); }
+    | name equals v_id       { $$ =  new Node("NAME", $3); }
     ;
 
 MKFSParams

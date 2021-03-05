@@ -93,15 +93,15 @@ void Controller::executeMKDISK(MKDISK disk) {
     strcpy(ruta, path.c_str());
     file = fopen(ruta, "r");
     if(file != NULL) {
-        msj("El disco ya existe");
+        msj("El disco ya existe!");
         return;
     }
 
     if(disk.u == "m") {
         disk.size = disk.size * 1024 * 1024;
     } else {
-        // kilobytes (k)
-        disk.size = disk.size * 1024 ;
+        // kilobytes
+        disk.size = disk.size * 1024;
     }
 
     //FALTA F
@@ -120,9 +120,9 @@ void Controller::executeMKDISK(MKDISK disk) {
     }
 
     cout<<"Disco\nFecha de creacion: "<<asctime(gmtime(&mbr.mbr_fecha_creacion))<<endl;
-    cout<<"Tamaño: "<< mbr.mbr_tamano << disk.u << "b" <<endl;
+    cout<<"Tamaño: "<< mbr.mbr_tamano << " bytes" <<endl;
 
-    char test[1024];
+    char test[1];
 
     file = fopen(ruta, "wb");
     for(int i=0; i < disk.size; i++){
@@ -132,8 +132,6 @@ void Controller::executeMKDISK(MKDISK disk) {
     fseek(file, 0, SEEK_SET);
     fwrite(&mbr, sizeof (MBR), 1, file);
     fclose(file);
-
-
 
     msj("Disco creado exitosamente!");
 }
@@ -175,9 +173,9 @@ void Controller::makeFDISK(Node *root) {
     int size;
     char name[16];
     char unit = 'k';
-    string path;
+    string path = "";
     int add = 0;
-    string cDelete;
+    string cDelete = "";
 
     while(counter < root->childs.begin()->count) {
         if(aux->type == "PATH") {
@@ -215,12 +213,12 @@ void Controller::makeFDISK(Node *root) {
             }
         } else if (aux->type == "TYPE") {
             if(aux->value == "e") {
-                fit = 'e';
+                type = 'e';
             } else if(aux->value == "l") {
-                fit = 'l';
+                type = 'l';
             } else {
                 //default P
-                fit = 'p';
+                type = 'p';
             }
         }
         aux++;
@@ -256,7 +254,11 @@ void Controller::executeFDISK(string path, char type, char fit, int size, char n
         createExtendPartition(auxDisk, path, fit, size, name, unit);
     } else if (type == 'l') {
         createLogicPartition(auxDisk, path, fit, size, name, unit);
+    } else if (cDelete != "") {
+        deletePartition(auxDisk, path, name, cDelete);
     }
+
+
 
 }
 
@@ -329,6 +331,7 @@ void Controller::createPrimaryPartition(MBR mbr, string path, char fit, int size
 
     if(flagName) {
         msj("El nombre de la particion a crear ya existe!");
+        fclose(file);
         return;
     }
 
@@ -362,11 +365,11 @@ void Controller::createPrimaryPartition(MBR mbr, string path, char fit, int size
         for (int i = 0; i < partition.part_size; ++i) {
             fwrite(&test, 1, 1, file);
         }
-        fclose(file);
         msj("Particiòn Creada exitosamente!");
     } else {
         msj("No hay espacio suficiente para crear la nueva particiòn!");
     }
+    fclose(file);
 }
 
 void Controller::createExtendPartition(MBR mbr, string path, char fit, int size, char name[16], char unit) {
@@ -381,10 +384,14 @@ void Controller::createExtendPartition(MBR mbr, string path, char fit, int size,
 
     int sizeUsed = 0; /* Size used for partitions */
     bool flagName = true;
-
+    bool existsEBR = false;
     for (int i = 0; i < 4; ++i) {
         if(mbr.mbr_partition[i].part_status == '1') {
             sizeUsed = sizeUsed + mbr.mbr_partition[i].part_size;
+            if(mbr.mbr_partition[i].part_type == 'e'){
+                existsEBR = true;
+                break;
+            }
         }
         if(strcmp(mbr.mbr_partition[i].part_name, name) == 0) {
             flagName = false;
@@ -392,8 +399,15 @@ void Controller::createExtendPartition(MBR mbr, string path, char fit, int size,
         }
     }
 
+    if(existsEBR) {
+        msj("Ya existe una particiòn extendida en este disco!");
+        fclose(file);
+        return;
+    }
+
     if(!flagName) {
         msj("El nombre de la particion a crear ya existe!");
+        fclose(file);
         return;
     }
 
@@ -410,7 +424,7 @@ void Controller::createExtendPartition(MBR mbr, string path, char fit, int size,
         Partition partition;
         partition.part_status = '1';
         partition.part_fit = fit;
-        partition.part_type = 'p';
+        partition.part_type = 'e';
         partition.part_size = size;
         strcpy(partition.part_name, name);
         if(index == 0) {
@@ -442,11 +456,11 @@ void Controller::createExtendPartition(MBR mbr, string path, char fit, int size,
         for (int i = 0; i < (ebr.part_size - (int) sizeof(EBR)); ++i) {
             fwrite(&test, 1, 1, file);
         }
-        fclose(file);
-        msj("Particiòn Creada exitosamente!");
+        msj("Particiòn Extendida Creada exitosamente!");
     } else {
         msj("No hay espacio suficiente para crear la nueva particiòn!");
     }
+    fclose(file);
 }
 
 void Controller::createLogicPartition(MBR mbr, string path, char fit, int size, char name[16], char unit) {
@@ -459,7 +473,7 @@ void Controller::createLogicPartition(MBR mbr, string path, char fit, int size, 
         return;
     }
 
-    int index = 0;
+    int index = -1;
     bool flag = false;
     for (int i = 0; i < 4; ++i) {
         if(mbr.mbr_partition[i].part_type == 'e'){
@@ -470,65 +484,122 @@ void Controller::createLogicPartition(MBR mbr, string path, char fit, int size, 
 
     if(flag) {
         msj("No existe una particion extendida para poder crear una logica!");
+        fclose(file);
         return;
     }
 
     // Checking space available
-    if(size <= mbr.mbr_partition[index].part_size) {
-        return;
-    }
+    if(mbr.mbr_partition[index].part_size >= size) {
+        EBR auxEBR;
+        fseek(file, mbr.mbr_partition[index].part_start, SEEK_SET);
+        fread(&auxEBR, sizeof(EBR),1, file);
 
-    EBR auxEBR;
-    fseek(file, mbr.mbr_partition[index].part_start, SEEK_SET);
-    fread(&auxEBR, sizeof(EBR),1, file);
-
-    if(auxEBR.part_next == -1) {
-        auxEBR.part_status = '1';
-        auxEBR.part_fit = fit;
-        auxEBR.part_start = mbr.mbr_partition[index].part_start;
-        auxEBR.part_size = size;
-        auxEBR.part_next =  mbr.mbr_partition[index].part_start + sizeof(EBR) + size;
-        strcpy(auxEBR.part_name, name);
-
-        char test = '1';
-        fseek(file, auxEBR.part_start, SEEK_SET);
-        fwrite(&auxEBR,sizeof(EBR), 1, file);
-        for (int i = 0; i < (auxEBR.part_size - (int) sizeof(EBR)); ++i) {
-            fwrite(&test, 1, 1, file);
-        }
-        fclose(file);
-    } else {
-        /* Recorre hasta encontrar la ultima particion logica */
-        bool checkName = true;
-        while(auxEBR.part_next != -1) {
-            if(strcmp(auxEBR.part_name, name) == 0){
-                checkName = false;
-                break;
-            }
-            fseek(file, auxEBR.part_start + auxEBR.part_size, SEEK_SET);
-            fread(&auxEBR, sizeof(EBR),1, file);
-        }
-
-        if(checkName) { /* Checking name unique */
-            EBR ebr;
-            ebr.part_status = '1';
-            ebr.part_fit = fit;
-            ebr.part_start = auxEBR.part_next;
-            ebr.part_size = size;
-            ebr.part_next = -1;
-            strcpy(ebr.part_name, name);
+        if(auxEBR.part_next == -1) {
+            auxEBR.part_status = '1';
+            auxEBR.part_fit = fit;
+            auxEBR.part_start = mbr.mbr_partition[index].part_start;
+            auxEBR.part_size = size;
+            auxEBR.part_next =  mbr.mbr_partition[index].part_start + sizeof(EBR) + size;
+            strcpy(auxEBR.part_name, name);
 
             char test = '1';
-            fseek(file, ebr.part_start, SEEK_SET);
-            fwrite(&ebr,sizeof(EBR), 1, file);
-            for (int i = 0; i < (ebr.part_size - (int) sizeof(EBR)); ++i) {
+            fseek(file, auxEBR.part_start, SEEK_SET);
+            fwrite(&auxEBR,sizeof(EBR), 1, file);
+            for (int i = 0; i < (auxEBR.part_size - (int) sizeof(EBR)); ++i) {
                 fwrite(&test, 1, 1, file);
             }
         } else {
-            msj(string("El nombre: '") + name + "' de la particion lógica a crear ya existe");
+            /* Recorre hasta encontrar la ultima particion logica */
+            bool checkName = true;
+            while(auxEBR.part_next != -1) {
+                if(strcmp(auxEBR.part_name, name) == 0){
+                    checkName = false;
+                    break;
+                }
+                fseek(file, auxEBR.part_start + auxEBR.part_size, SEEK_SET);
+                fread(&auxEBR, sizeof(EBR),1, file);
+            }
+
+            if(checkName) { /* Checking name unique */
+                EBR ebr;
+                ebr.part_status = '1';
+                ebr.part_fit = fit;
+                ebr.part_start = auxEBR.part_next;
+                ebr.part_size = size;
+                ebr.part_next = -1;
+                strcpy(ebr.part_name, name);
+
+                char test = '1';
+                fseek(file, ebr.part_start, SEEK_SET);
+                fwrite(&ebr,sizeof(EBR), 1, file);
+                for (int i = 0; i < (ebr.part_size - (int) sizeof(EBR)); ++i) {
+                    fwrite(&test, 1, 1, file);
+                }
+                msj("Partición lógica creada exitosamente!");
+            } else {
+                msj(string("El nombre: '") + name + "' de la particion lógica a crear ya existe");
+            }
         }
+    } else {
+        msj("No se cuenta con espacio suficiente para crear la partición lógica!");
         fclose(file);
+        return;
     }
+    fclose(file);
+}
+
+void Controller::deletePartition(MBR mbr, string path, char name[16], string commandDelete) {
+    FILE *file;
+
+    file = fopen(path.c_str(),"rb+");
+
+    string input;
+    while(true) {
+        msj("Esta seguro de eliminar la particion? [Y/N]");
+        cin >> input;
+        if(input == "Y" || input == "y") {
+            break;
+        } else if(input == "N" || input == "n") {
+            return;
+        }
+    }
+
+    int index = -1;
+    for (int i = 0; i < 4; ++i) {
+        /*Checking if partition exists */
+        if(strcmp(mbr.mbr_partition[i].part_name, name) == 0){
+            index = i;
+            break;
+        }
+    }
+    if(index != -1) {
+        /*Checking if partition is unmount*/
+        if(mbr.mbr_partition[index].part_status != '2'){
+            /*if it is EBR the partition logic is eliminated*/
+            if(mbr.mbr_partition[index].part_type == 'e') {
+                /* Deleting logical partitions */
+                //TODO
+            }
+            /* Settings for full*/
+            if(commandDelete == "full") {
+                fseek(file, mbr.mbr_partition[index].part_start, SEEK_SET);
+                for (int i = 0; i < mbr.mbr_partition[index].part_size; ++i) {
+                    fwrite(&nulo, 1, 1, file);
+                }
+            }
+            /* Common fast and full settings */
+            mbr.mbr_partition[index].part_status = '0';
+            mbr.mbr_partition[index].part_start = -1;
+
+            fseek(file, 0, SEEK_SET);
+            fwrite(&mbr, sizeof(MBR), 1, file);
+        } else {
+            msj(string("Para poder eliminar la particion : ") + name + " debe de desmontarla primero!");
+        }
+    } else {
+        msj("ERROR: La particion que desea eliminar no existe!");
+    }
+    fclose(file);
 }
 
 void Controller::makeMount(Node *root) {
@@ -568,4 +639,68 @@ void Controller::makeUnMount(Node *root) {
 void Controller::executeUnMount(string id) {
     // DELETE mount of list simple
     listMount->unMount(id);
+}
+
+void Controller::generateDOT() {
+    FILE *filee;
+    fopen("/home/cgomez/Escritorio/Disco1.dk", "rb+");
+
+    MBR mbr;
+    fseek(filee, 0, SEEK_SET);
+    fread(&mbr, sizeof(MBR),1, filee);
+
+    string cadena = "digraph a {\n"
+                    "    rankdir=LR\n"
+                    "    node [shape=plaintext]\n"
+                    "    \n"
+                    "    a [label=<\n"
+                    "<TABLE BORDER=\"2\" CELLBORDER=\"1\" CELLSPACING=\"5\" CELLPADDING=\"5\">\n"
+                    "  <TR>\n"
+                    "    <TD ROWSPAN=\"3\" WIDTH=\"10\">MBR</TD>\n";
+
+
+    for (int i = 0; i < 4; ++i) {
+        if(mbr.mbr_partition[i].part_status == '1'){
+            if(mbr.mbr_partition[i].part_type == 'e'){
+                cadena+=     "    <TD COLSPAN=\"3\" WIDTH=\"10\">\n"
+                             "        Extendida\n"
+                             "    </TD>\n"
+                             "  </TR>\n"
+                             "  \n";
+
+                EBR auxEBR;
+                fseek(filee, mbr.mbr_partition[i].part_start, SEEK_SET);
+                fread(&auxEBR, sizeof(EBR), 1, filee);
+
+                while(auxEBR.part_next != -1){
+                    cadena+= "  <TR >\n"
+                             "    <TD >Lógica</TD>\n"
+                             "  </TR>\n";
+                }
+            } else {
+                cadena += "    <TD ROWSPAN=\"3\" WIDTH=\"10\">"+ string(mbr.mbr_partition[i].part_name) +"</TD>\n";
+            }
+        }
+    }
+
+        cadena +="  \n"
+                    "\n"
+                    "</TABLE>>];\n"
+                    "\n"
+                    "\n"
+                    "}";
+
+    string comando = "dot -Tpng  MBR.dot -o MBR.png";
+    string path = "MBR.png";
+
+    ofstream file("MBR.dot");
+    file << cadena.c_str();
+    file.close();
+
+    //cerrando archivo de prueba
+    fclose(filee);
+
+    system(comando.c_str());
+    system(path.c_str());
+
 }

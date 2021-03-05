@@ -7,6 +7,8 @@
 
 #include <iostream>
 #include <fstream>
+#include <ostream>
+#include <sstream>
 #include "Node.h"
 #include "../Analizador/parser.h"
 #include "../Analizador/scanner.h"
@@ -20,6 +22,8 @@ using namespace std;
 class Controller {
 public:
     void run();
+    void generateDOT();
+
 private:
     struct MKDISK
     {
@@ -63,6 +67,7 @@ private:
     SimpleList *listMount = new SimpleList();
 
     static void msj(string mensaje);
+    char nulo = '\0';
 
     void readCommand(string input);
     void command(Node *root);
@@ -79,10 +84,13 @@ private:
     void createPrimaryPartition(MBR mbr, string path, char fit, int size, char name[16], char unit);
     void createExtendPartition(MBR mbr, string path, char fit, int size, char name[16], char unit);
     void createLogicPartition(MBR mbr, string path, char fit, int size, char name[16], char unit);
+    void deletePartition(MBR mbr, string path, char name[16], string commandDelete);
+    void deleteEBR(MBR mbr);
     void makeMount(Node *root);
     void executeMount(string path, string name);
     void makeUnMount(Node *root);
     void executeUnMount(string id);
+
 };
 
 
