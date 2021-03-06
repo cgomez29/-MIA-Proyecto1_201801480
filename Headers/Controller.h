@@ -9,6 +9,7 @@
 #include <fstream>
 #include <ostream>
 #include <sstream>
+#include <cctype>
 #include "Node.h"
 #include "../Analizador/parser.h"
 #include "../Analizador/scanner.h"

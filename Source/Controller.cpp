@@ -53,7 +53,7 @@ void Controller::command(Node *root) {
         }
     } else if(root->type == "UNMOUNT") {
         if(commandChecker->checkUNMOUNT(root)) {
-            //TODO
+            makeUnMount(root);
             return;
         }
     } else if(root->type == "REP") {
@@ -693,7 +693,9 @@ void Controller::makeUnMount(Node *root) {
 
 void Controller::executeUnMount(string id) {
     // DELETE mount of list simple
-    listMount->unMount(id);
+    int size = id.length()-1;
+    string id2 = id.substr(0,size) + (char) toupper(id[size]);
+    listMount->unMount(id2);
 }
 
 /**

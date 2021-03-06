@@ -51,17 +51,23 @@ void SimpleList::unMount(string id) {
             } else {
                 this->head = NULL;
             }
+            cout << "\nPartición desmontada!\n" << endl;
             return;
         }
     }
-
+    bool flag = true;
     while(aux != NULL) {
         if(aux->getId() == id){
             ant->setNext(aux->getNext());
+            flag = false;
+            cout << "\nPartición desmontada!\n" << endl;
+            break;
         }
         ant = aux;
         aux = aux->getNext();
     }
+    if(flag)
+        cout << "\nERROR: La partición: "<< id << " No se encuentra montada!\n" << endl;
 }
 
 char SimpleList::checkLetterMount(string path) {
@@ -107,6 +113,17 @@ int SimpleList::checkNumberMount(string path) {
         partitionNumber++;
         return partitionNumber;
     }
+}
+
+bool SimpleList::existsMount(string id) {
+    Mount* aux = this->head;
+    while (aux != NULL){
+        if(aux->getId() == id){
+            return true;
+        }
+        aux = aux->getNext();
+    }
+    return false;
 }
 
 
