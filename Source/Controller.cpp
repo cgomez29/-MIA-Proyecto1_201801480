@@ -70,6 +70,9 @@ void Controller::makeMKDISK(Node *root) {
     aux = root->childs.begin()->childs.begin();
     int counter=0;
     struct MKDISK disk;
+    // default values
+    disk.f = "b";
+    disk.u = "m";
     while (counter < root->childs.begin()->count) {
         if (aux->type == "SIZE") {
             disk.size = stoi(aux->value);
@@ -113,7 +116,8 @@ void Controller::executeMKDISK(MKDISK disk) {
 
     MBR mbr;
     mbr.mbr_tamano = disk.size;
-    mbr.mbr_disk_signature = rand()%1000;
+    mbr.disk_fit = disk.f[0];
+    mbr.mbr_disk_signature = rand()%10000;
     mbr.mbr_fecha_creacion = time(0);
     for (int i = 0; i < 4; ++i) {
         mbr.mbr_partition[i].part_status = '0';
@@ -503,25 +507,9 @@ void Controller::createLogicPartition(MBR mbr, string path, char fit, int size, 
         EBR auxEBR;
         fseek(file, mbr.mbr_partition[index].part_start, SEEK_SET);
         fread(&auxEBR, sizeof(EBR),1, file);
-
-        if(auxEBR.part_next == -1) {
-            auxEBR.part_status = '1';
-            auxEBR.part_fit = fit;
-            auxEBR.part_start = mbr.mbr_partition[index].part_start;
-            auxEBR.part_size = size;
-            auxEBR.part_next =  mbr.mbr_partition[index].part_start + sizeof(EBR) + size;
-            strcpy(auxEBR.part_name, name);
-
-            char test = '1';
-            fseek(file, auxEBR.part_start, SEEK_SET);
-            fwrite(&auxEBR,sizeof(EBR), 1, file);
-            for (int i = 0; i < (auxEBR.part_size - (int) sizeof(EBR)); ++i) {
-                fwrite(&test, 1, 1, file);
-            }
-            msj("Partición lógica creada exitosamente!");
-        } else {
             /* Recorre hasta encontrar la ultima particion logica */
             bool checkName = true;
+
             while(auxEBR.part_next != -1) {
                 if(strcmp(auxEBR.part_name, name) == 0){
                     checkName = false;
@@ -531,11 +519,25 @@ void Controller::createLogicPartition(MBR mbr, string path, char fit, int size, 
                 fread(&auxEBR, sizeof(EBR),1, file);
             }
 
+
             if(checkName) { /* Checking name unique */
+                int part_next;
+                /*Estando en el ultimo EBR Se actualiza la siguiente posicion*/
+                if(auxEBR.part_next == -1){
+                    if(auxEBR.part_size == 0){
+                        part_next = auxEBR.part_start;
+                    } else {
+                        part_next = auxEBR.part_start + sizeof(EBR) + auxEBR.part_size;
+                    }
+                    /*auxEBR.part_next = part_next;
+                    fseek(file, auxEBR.part_start, SEEK_SET);
+                    fwrite(&auxEBR, sizeof(EBR), 1, file);*/
+                }
+
                 EBR ebr;
                 ebr.part_status = '1';
                 ebr.part_fit = fit;
-                ebr.part_start = auxEBR.part_next;
+                ebr.part_start = part_next;
                 ebr.part_size = size;
                 ebr.part_next = -1;
                 strcpy(ebr.part_name, name);
@@ -550,7 +552,7 @@ void Controller::createLogicPartition(MBR mbr, string path, char fit, int size, 
             } else {
                 msj(string("El nombre: '") + name + "' de la particion lógica a crear ya existe");
             }
-        }
+
     } else {
         msj("No se cuenta con espacio suficiente para crear la partición lógica!");
         fclose(file);
@@ -676,6 +678,11 @@ void Controller::executeMount(string path, string name) {
             fseek(file, auxEBR.part_next, SEEK_SET);
             fread(&auxEBR, sizeof(EBR), 1, file);
         }
+        // checking current EBR
+        if(auxEBR.part_name == name){
+            listMount->add("", path, name);
+            existsPartition = true;
+        }
     }
     fclose(file);
     if(!existsPartition){
@@ -723,18 +730,22 @@ void Controller::executeREP() {
         aux++;
         counter++;
     }
-    if(aux->value == "MBR" || aux->value == "mbr"){
-        controllerReport->reportMBR(id,path);
-    } else if(aux->value == "DISK" || aux->value == "disk"){
-    } else if(aux->value == "INODE" || aux->value == "inode"){
-    } else if(aux->value == "Journaling" || aux->value == "journaling"){
-    } else if(aux->value == "BLOCK" || aux->value == "block"){
-    } else if(aux->value == "bm_inode" || aux->value == "BM_INODE"){
-    } else if(aux->value == "bm_block" || aux->value == "BM_BLOCK"){
-    } else if(aux->value == "tree" || aux->value == "TREE"){
-    } else if(aux->value == "sb" || aux->value == "SB"){
-    } else if(aux->value == "file" || aux->value == "FILE"){
-    } else if(aux->value == "ls" || aux->value == "ls"){
+
+    string pathDisk = listMount->existsMount(id);
+    if(pathDisk != ""){
+        if(name == "MBR" || name == "mbr"){
+            controllerReport->reportMBR(pathDisk,path);
+        } else if(name == "DISK" || name == "disk"){
+        } else if(name == "INODE" || name == "inode"){
+        } else if(name == "Journaling" || name == "journaling"){
+        } else if(name == "BLOCK" || name == "block"){
+        } else if(name == "bm_inode" || name == "BM_INODE"){
+        } else if(name == "bm_block" || name == "BM_BLOCK"){
+        } else if(name == "tree" || name == "TREE"){
+        } else if(name == "sb" || name == "SB"){
+        } else if(name == "file" || name == "FILE"){
+        } else if(name == "ls" || name == "ls"){
+        }
     }
 }
 

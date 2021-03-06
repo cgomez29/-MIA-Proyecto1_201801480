@@ -23,7 +23,7 @@ public:
     void unMount(string id);
     char checkLetterMount(string);
     int checkNumberMount(string);
-    bool existsMount(string);
+    string existsMount(string);
 };
 
 

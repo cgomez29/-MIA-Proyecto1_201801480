@@ -165,5 +165,9 @@ bool CommandChecker::checkREP(Node *root) {
         aux++;
         counter++;
     }
+
+    if(!flag){
+        cout << "\nReporte solicitado no valido!!!\n" << endl;
+    }
     return flag;
 }

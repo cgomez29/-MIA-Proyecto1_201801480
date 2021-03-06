@@ -47,7 +47,7 @@ private:
     void generateDOT(string, string, string);
 
 public:
-    void reportMBR(string id, string path);
+    void reportMBR(string diskPath, string path);
     void reportDISK(MBR mbr);
 
 };
