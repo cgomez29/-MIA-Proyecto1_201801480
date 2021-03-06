@@ -281,10 +281,12 @@ int Controller::bestFit(MBR mbr) {
     bool flag = false;
     for (int i = 0; i < 4; ++i) {
         if(mbr.mbr_partition[i].part_start == -1) {
-            flag = true;
+
+            return i;
+            /*flag = true;
             if(aux != i && mbr.mbr_partition[aux].part_size > mbr.mbr_partition[i].part_size) {
                 aux = i;
-            }
+            }*/
         }
     }
 
@@ -299,11 +301,13 @@ int Controller::worstFit(MBR mbr) {
     bool flag = false;
     for (int i = 0; i < 4; ++i) {
         if(mbr.mbr_partition[i].part_start == -1) {
+            return i;
+        } /*else {
             flag = true;
-            if(aux != i && mbr.mbr_partition[aux].part_size < mbr.mbr_partition[i].part_size) {
+            if(i != aux && mbr.mbr_partition[aux].part_size < mbr.mbr_partition[i].part_size) {
                 aux = i;
             }
-        }
+        }*/
     }
     if(flag) {
         return aux;
@@ -479,11 +483,12 @@ void Controller::createLogicPartition(MBR mbr, string path, char fit, int size, 
     }
 
     int index = -1;
-    bool flag = false;
+    bool flag = true;
     for (int i = 0; i < 4; ++i) {
         if(mbr.mbr_partition[i].part_type == 'e'){
             index = i;
-            flag = true;
+            flag = false;
+            break;
         }
     }
 
@@ -513,6 +518,7 @@ void Controller::createLogicPartition(MBR mbr, string path, char fit, int size, 
             for (int i = 0; i < (auxEBR.part_size - (int) sizeof(EBR)); ++i) {
                 fwrite(&test, 1, 1, file);
             }
+            msj("Partición lógica creada exitosamente!");
         } else {
             /* Recorre hasta encontrar la ultima particion logica */
             bool checkName = true;
@@ -629,8 +635,52 @@ void Controller::makeMount(Node *root) {
  *  Mount partitions
  * */
 void Controller::executeMount(string path, string name) {
-    string id = 80 + "";
-    listMount->add(id, path, name);
+    FILE *file;
+
+    file = fopen(path.c_str(), "rb+");
+
+    if(file == NULL){
+        msj("El disco no existe!");
+        return;
+    }
+
+    bool existsPartition =  false;
+
+    MBR auxMBR;
+    fseek(file,0,SEEK_SET);
+    fread(&auxMBR, sizeof(MBR), 1, file);
+
+    int indexEBR = -1;
+    for (int i = 0; i < 4; ++i) {
+        if(auxMBR.mbr_partition[i].part_name == name) {
+            listMount->add("", path, name);
+            existsPartition = true;
+            break;
+        }
+        if(auxMBR.mbr_partition[i].part_type == 'e'){
+            indexEBR = i;
+        }
+    }
+
+    EBR auxEBR;
+    /*If it is different of -1 then is EBR partition*/
+    if(indexEBR != -1){
+        fseek(file, auxMBR.mbr_partition[indexEBR].part_start, SEEK_SET);
+        fread(&auxEBR, sizeof(EBR), 1, file);
+        while(auxEBR.part_next != -1){
+            if(auxEBR.part_name == name){
+                listMount->add("", path, name);
+                existsPartition = true;
+                break;
+            }
+            fseek(file, auxEBR.part_next, SEEK_SET);
+            fread(&auxEBR, sizeof(EBR), 1, file);
+        }
+    }
+    fclose(file);
+    if(!existsPartition){
+        cout << "No existe la partición: " << name << endl;
+    }
 }
 
 void Controller::makeUnMount(Node *root) {

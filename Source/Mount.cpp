@@ -5,7 +5,7 @@
 #include "../Headers/Mount.h"
 
 Mount::Mount() {
-    this->next = nullptr;
+    this->next = NULL;
 }
 
 Mount::Mount(string _id, string _path, string _name) {
@@ -44,4 +44,12 @@ const string &Mount::getName() const {
 
 void Mount::setName(const string &name) {
     Mount::name = name;
+}
+
+const int &Mount::getDiskNumber() const {
+    return diskNumber;
+}
+
+void Mount::setDiskNumber(const int &diskNumber) {
+    Mount::diskNumber = diskNumber;
 }

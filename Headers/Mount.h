@@ -11,10 +11,11 @@ using namespace std;
 class Mount {
 
 private:
-    Mount *next;
+    Mount *next = NULL;
     string id;
     string path;
     string name;
+    int diskNumber;
 
 public:
     Mount();
@@ -27,6 +28,9 @@ public:
     void setPath(const string &path);
     const string &getName() const;
     void setName(const string &name);
+    const int &getDiskNumber() const;
+    void setDiskNumber(const int &diskNumber);
+
 
 };
 
