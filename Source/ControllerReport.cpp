@@ -130,66 +130,83 @@ void ControllerReport::reportMBR(string diskPath, string path) {
     generateDOT("ReportMBR.txt", path, content);
 }
 
-void ControllerReport::reportDISK(ControllerReport::MBR mbr) {
-    FILE *filee;
-    fopen("/home/cgomez/Escritorio/Disco1.dk", "rb+");
+void ControllerReport::reportDISK(string diskPath, string path) {
+    FILE *file;
+    file = fopen(diskPath.c_str(), "rb+");
 
-    fseek(filee, 0, SEEK_SET);
-    fread(&mbr, sizeof(MBR),1, filee);
+    string nameDisk;
+    int total =0;
+    const size_t last_slash = diskPath.rfind('/');
+    if(string::npos != last_slash){
+        nameDisk = diskPath.substr(last_slash+1,diskPath.length()-1);
+    }
 
-    string cadena = "digraph a {\n"
-                    "    rankdir=LR\n"
-                    "    node [shape=plaintext]\n"
-                    "    \n"
-                    "    a [label=<\n"
-                    "<TABLE BORDER=\"2\" CELLBORDER=\"1\" CELLSPACING=\"5\" CELLPADDING=\"5\">\n"
-                    "  <TR>\n"
-                    "    <TD ROWSPAN=\"3\" WIDTH=\"10\">MBR</TD>\n";
+    MBR auxMBR;
+    fseek(file,0,SEEK_SET);
+    fread(&auxMBR, sizeof(MBR), 1, file);
 
+    string content = "digraph structs {\n"
+                     "    rankdir=LR\n"
+                     "    node [shape=plaintext]\n"
+                     "    \n"
+                     "    a [label=<\n"
+                     "<TABLE BORDER=\"2\" CELLBORDER=\"1\" CELLSPACING=\"5\" CELLPADDING=\"5\">\n"
+                     "  <TR>\n"
+                     "    <TD ROWSPAN=\"3\" WIDTH=\"10\">MBR</TD>\n"
+                     "  \n";                                                                                                                                                                                                                                                                                                                       "        \n";
 
+    int indexEBR = -1;
     for (int i = 0; i < 4; ++i) {
-        if(mbr.mbr_partition[i].part_status == '1'){
-            if(mbr.mbr_partition[i].part_type == 'e'){
-                cadena+=     "    <TD COLSPAN=\"3\" WIDTH=\"10\">\n"
-                             "        Extendida\n"
-                             "    </TD>\n"
-                             "  </TR>\n"
-                             "  \n";
+        if(auxMBR.mbr_partition[i].part_status != '0'){
 
-                EBR auxEBR;
-                fseek(filee, mbr.mbr_partition[i].part_start, SEEK_SET);
-                fread(&auxEBR, sizeof(EBR), 1, filee);
-
-                while(auxEBR.part_next != -1){
-                    cadena+= "  <TR >\n"
-                             "    <TD >Lógica</TD>\n"
-                             "  </TR>\n";
-                }
-            } else {
-                cadena += "    <TD ROWSPAN=\"3\" WIDTH=\"10\">"+ string(mbr.mbr_partition[i].part_name) +"</TD>\n";
+            if(auxMBR.mbr_partition[i].part_type != 'e'){
+                long porcentaje = auxMBR.mbr_partition[i].part_size*100/auxMBR.mbr_tamano;
+                content += "    <TD ROWSPAN=\"3\" WIDTH=\"10\">Primaria \n" +
+                        to_string(porcentaje) + "%</TD>\n";
             }
+        }
+        if(auxMBR.mbr_partition[i].part_type == 'e'){
+            content += "    <TD COLSPAN=\"20\" WIDTH=\"10\">\n"
+                       "        Extendida\n"
+                       "    </TD>\n"
+                       "  \n";
+            indexEBR = i;
         }
     }
 
-    cadena +="  \n"
-             "\n"
-             "</TABLE>>];\n"
-             "\n"
-             "\n"
-             "}";
+    content += "  </TR>\n"
+               "  \n";
 
-    string comando = "dot -Tpng  MBR.dot -o MBR.png";
-    string path = "MBR.png";
+    EBR auxEBR;
+    int counter = 1;
+    /*If it is different of -1 then is EBR partition*/
+    if(indexEBR != -1){
+        long porcentaje =0;
+        fseek(file, auxMBR.mbr_partition[indexEBR].part_start, SEEK_SET);
+        fread(&auxEBR, sizeof(EBR), 1, file);
+        content += "  \n"
+                   "  <TR >\n";
+        while(auxEBR.part_next != -1){
+            porcentaje = auxEBR.part_size*100/auxMBR.mbr_tamano;
 
-    ofstream file("MBR.dot");
-    file << cadena.c_str();
-    file.close();
+            content += "    <TD > EBR| Lógica " + to_string(porcentaje) + "%</TD>\n"
+                       "  \n";
+            counter++;
+            fseek(file, auxEBR.part_next, SEEK_SET);
+            fread(&auxEBR, sizeof(EBR), 1, file);
+        }
+        /*Escribe el EBR actual*/
+        porcentaje = auxEBR.part_size*100/auxMBR.mbr_tamano;
+        content +="    <TD > EBR| Lógica " + to_string(porcentaje) + "%</TD>\n"
+                   "  </TR>\n"
+                   "  \n";
 
-    //cerrando archivo de prueba
-    fclose(filee);
-
-    system(comando.c_str());
-    system(path.c_str());
+    }
+    content += "\n"
+               "</TABLE>>];\n"
+               "}";
+    fclose(file);
+    generateDOT("ReportDISK.txt", path, content);
 }
 
 
@@ -233,4 +250,8 @@ void ControllerReport::generateDOT(string name, string path, string dot) {
     cmd = "xdg-open '" + path + "'";
     system(cmd.c_str());
     cout << "Reporte generado" << endl;
+}
+
+string ControllerReport::reportDISKEBR(int indexEBR, ControllerReport::MBR auxMBR) {
+    return std::string();
 }

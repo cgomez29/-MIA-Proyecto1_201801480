@@ -48,8 +48,8 @@ private:
 
 public:
     void reportMBR(string diskPath, string path);
-    void reportDISK(MBR mbr);
-
+    void reportDISK(string diskPath, string path);
+    string reportDISKEBR(int indexEBR, MBR auxMBR);
 };
 
 

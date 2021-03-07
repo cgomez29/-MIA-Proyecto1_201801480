@@ -736,6 +736,7 @@ void Controller::executeREP() {
         if(name == "MBR" || name == "mbr"){
             controllerReport->reportMBR(pathDisk,path);
         } else if(name == "DISK" || name == "disk"){
+            controllerReport->reportDISK(pathDisk,path);
         } else if(name == "INODE" || name == "inode"){
         } else if(name == "Journaling" || name == "journaling"){
         } else if(name == "BLOCK" || name == "block"){
