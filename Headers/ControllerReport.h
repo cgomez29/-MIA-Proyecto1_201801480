@@ -49,7 +49,7 @@ private:
 public:
     void reportMBR(string diskPath, string path);
     void reportDISK(string diskPath, string path);
-    string reportDISKEBR(int indexEBR, MBR auxMBR);
+    void reportSuperBloque(string diskPath, string path);
 };
 
 

@@ -252,6 +252,6 @@ void ControllerReport::generateDOT(string name, string path, string dot) {
     cout << "Reporte generado" << endl;
 }
 
-string ControllerReport::reportDISKEBR(int indexEBR, ControllerReport::MBR auxMBR) {
-    return std::string();
+void ControllerReport::reportSuperBloque(string diskPath, string path) {
+
 }

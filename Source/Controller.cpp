@@ -61,6 +61,11 @@ void Controller::command(Node *root) {
             executeREP();
             return;
         }
+    } else if(root->type == "MKFS") {
+        if(commandChecker->checkMKFS(root)) {
+            fileSystem->makeMKFS(root);
+            return;
+        }
     }
     cout << "Comando no valido" << endl;
 }
@@ -655,7 +660,7 @@ void Controller::executeMount(string path, string name) {
     int indexEBR = -1;
     for (int i = 0; i < 4; ++i) {
         if(auxMBR.mbr_partition[i].part_name == name) {
-            listMount->add("", path, name);
+            listMount->getInstance()->add("", path, name);
             existsPartition = true;
             break;
         }
@@ -671,7 +676,7 @@ void Controller::executeMount(string path, string name) {
         fread(&auxEBR, sizeof(EBR), 1, file);
         while(auxEBR.part_next != -1){
             if(auxEBR.part_name == name){
-                listMount->add("", path, name);
+                listMount->getInstance()->add("", path, name);
                 existsPartition = true;
                 break;
             }
@@ -680,7 +685,7 @@ void Controller::executeMount(string path, string name) {
         }
         // checking current EBR
         if(auxEBR.part_name == name){
-            listMount->add("", path, name);
+            listMount->getInstance()->add("", path, name);
             existsPartition = true;
         }
     }
@@ -702,7 +707,7 @@ void Controller::executeUnMount(string id) {
     // DELETE mount of list simple
     int size = id.length()-1;
     string id2 = id.substr(0,size) + (char) toupper(id[size]);
-    listMount->unMount(id2);
+    listMount->getInstance()->unMount(id2);
 }
 
 /**
@@ -731,7 +736,7 @@ void Controller::executeREP() {
         counter++;
     }
 
-    string pathDisk = listMount->existsMount(id);
+    string pathDisk = listMount->getInstance()->existsMount(id);
     if(pathDisk != ""){
         if(name == "MBR" || name == "mbr"){
             controllerReport->reportMBR(pathDisk,path);
@@ -744,10 +749,12 @@ void Controller::executeREP() {
         } else if(name == "bm_block" || name == "BM_BLOCK"){
         } else if(name == "tree" || name == "TREE"){
         } else if(name == "sb" || name == "SB"){
+            controllerReport->reportSuperBloque(pathDisk, path);
         } else if(name == "file" || name == "FILE"){
         } else if(name == "ls" || name == "ls"){
         }
     }
 }
+
 
 

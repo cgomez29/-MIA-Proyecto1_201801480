@@ -16,6 +16,7 @@
 #include "CommandChecker.h"
 #include "SimpleList.h"
 #include "ControllerReport.h"
+#include "ControllerFileSystem.h"
 
 extern Node * root;
 
@@ -66,7 +67,8 @@ private:
 
     CommandChecker *commandChecker = new CommandChecker();
     ControllerReport *controllerReport = new ControllerReport();
-    SimpleList *listMount = new SimpleList();
+    ControllerFileSystem *fileSystem = new ControllerFileSystem();
+    SimpleList* listMount = SimpleList::getInstance();
 
     static void msj(string mensaje);
     char nulo = '\0';
@@ -93,8 +95,9 @@ private:
     void makeUnMount(Node *root);
     void executeUnMount(string id);
 
-
-    /*REPORTS*/
+    /**
+     * REPORTS
+     * */
     void executeREP();
 
 

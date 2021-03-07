@@ -4,6 +4,17 @@
 
 #include "../Headers/SimpleList.h"
 
+//Initialized
+SimpleList* SimpleList::instance = 0;
+
+SimpleList *SimpleList::getInstance() {
+    if(instance == 0){
+        instance = new SimpleList();
+    }
+    return instance;
+}
+
+
 SimpleList::SimpleList() {
     this->head = NULL;
     this->tail = NULL;
@@ -123,9 +134,20 @@ string SimpleList::existsMount(string id) {
         }
         aux = aux->getNext();
     }
-    cout << "\nERROR: Particion no montada.\nrrr" << endl;
+    cout << "\nERROR: Partición no montada.\n" << endl;
     return "";
 }
 
+Mount* SimpleList::existsMountObject(string id) {
+    Mount* aux = this->head;
+    while (aux != NULL){
+        if(aux->getId() == id){
+            return aux;
+        }
+        aux = aux->getNext();
+    }
+    cout << "\nERROR: Partición no montada.\n" << endl;
+    return NULL;
+}
 
 

@@ -171,3 +171,18 @@ bool CommandChecker::checkREP(Node *root) {
     }
     return flag;
 }
+
+bool CommandChecker::checkMKFS(Node *root) {
+    list<Node> :: iterator aux;
+    aux = root->childs.begin()->childs.begin();
+    int counter = 0;
+    while(counter < root->childs.begin()->count) {
+        if(aux->type == "ID"){
+            return true;
+        }
+        aux++;
+        counter++;
+    }
+    cout << "\nEl parámetro ID es obligatorio!\n" << endl;
+    return false;
+}

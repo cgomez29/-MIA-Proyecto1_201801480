@@ -176,7 +176,7 @@ MKFSParams
 MKFSParam
     : id equals v_id2 { $$ = new Node("ID", $3); }
     | id equals v_string { $$ = new Node("ID", $3); }
-    | Rtype equals fast { $$ = new Node("TYPE", $3); }
+    | type equals fast { $$ = new Node("TYPE", $3); }
     | type equals full { $$ = new Node("TYPE", $3); }
     | fs equals dosfs { $$ = new Node("FS", "2fs"); }
     | fs equals tresfs { $$ = new Node("FS", "3fs"); }

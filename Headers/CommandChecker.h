@@ -15,8 +15,8 @@ public:
     bool checkFDISK(Node *root);
     bool checkMOUNT(Node *root);
     bool checkUNMOUNT(Node *root);
-
     bool checkREP(Node *root);
+    bool checkMKFS(Node *root);
 };
 
 

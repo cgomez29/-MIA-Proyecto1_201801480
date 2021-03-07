@@ -14,16 +14,19 @@ private:
     char alphabet[26] = {'A','B','C','D','E','F', 'G','H','I',
                          'J','K','L','M','N','O', 'P','Q','R',
                          'S','T','U','V','W','X', 'Y','Z'};
-    int partitionNumber;
-
-public:
     SimpleList();
+    int partitionNumber;
+    static SimpleList* instance;
+public:
+
+    static SimpleList* getInstance();
     void add(string id, string path, string name);
     void printList();
     void unMount(string id);
     char checkLetterMount(string);
     int checkNumberMount(string);
     string existsMount(string);
+    Mount* existsMountObject(string);
 };
 
 
