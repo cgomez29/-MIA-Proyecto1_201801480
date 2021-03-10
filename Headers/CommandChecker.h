@@ -17,6 +17,9 @@ public:
     bool checkUNMOUNT(Node *root);
     bool checkREP(Node *root);
     bool checkMKFS(Node *root);
+    bool checkEXEC(Node *root);
+
+    string getExtension(string path);
 };
 
 

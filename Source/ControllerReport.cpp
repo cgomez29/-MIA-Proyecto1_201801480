@@ -8,12 +8,7 @@ void ControllerReport::reportMBR(string diskPath, string path) {
     FILE *file;
     file = fopen(diskPath.c_str(), "rb+");
 
-    string nameDisk;
-
-    const size_t last_slash = diskPath.rfind('/');
-    if(string::npos != last_slash){
-        nameDisk = diskPath.substr(last_slash+1,diskPath.length()-1);
-    }
+    string nameDisk = getNameDisk(diskPath);
 
     MBR auxMBR;
     fseek(file,0,SEEK_SET);
@@ -134,13 +129,6 @@ void ControllerReport::reportDISK(string diskPath, string path) {
     FILE *file;
     file = fopen(diskPath.c_str(), "rb+");
 
-    string nameDisk;
-    int total =0;
-    const size_t last_slash = diskPath.rfind('/');
-    if(string::npos != last_slash){
-        nameDisk = diskPath.substr(last_slash+1,diskPath.length()-1);
-    }
-
     MBR auxMBR;
     fseek(file,0,SEEK_SET);
     fread(&auxMBR, sizeof(MBR), 1, file);
@@ -252,6 +240,117 @@ void ControllerReport::generateDOT(string name, string path, string dot) {
     cout << "Reporte generado" << endl;
 }
 
-void ControllerReport::reportSuperBloque(string diskPath, string path) {
+void ControllerReport::reportSuperBloque(string diskPath, string part_name, string path) {
+    /* return the partition start and size */
+    format partition = getPartitionStart(diskPath, part_name);
 
+    FILE *file;
+    file = fopen(diskPath.c_str(), "rb+");
+    SuperBlock auxSB;
+    fseek(file, partition.start, SEEK_SET);
+    fread(&auxSB, sizeof(SuperBlock), 1, file);
+
+    stringstream content;
+    content << "digraph {\n"
+               "    \n"
+               " node[ shape=plaintext, fontname = \"Arial\" ];\n"
+               " \n"
+               "    labelloc=\"t\";\n"
+               "    label=\"Reporte SUPER BLOQUE \";\n"
+               "    fontsize  = 25; \n"
+               "    fontcolor = darkslategray4;\n"
+               " \n"
+               " subgraph cluster_0 {\n"
+               "     \n"
+               "        tbl [\n"
+               "    label=<\n"
+               "      <table cellspacing='0' CELLPADDING=\"5\">\n"
+               "        <tr><td bgcolor=\"gray82\"  >Nombre</td><td bgcolor=\"gray82\">Valor</td></tr>\n"
+               "        <tr><td>s_filesystem_type</td><td> " << auxSB.s_filesystem_type << " </td></tr>\n"
+               "        <tr><td>s_inodes_count</td><td> "<< auxSB.s_inodes_count <<" </td></tr>\n"
+               "        <tr><td>s_blocks_count</td><td> "<< auxSB.s_blocks_count <<" </td></tr>\n"
+               "        <tr><td>s_free_blocks_count</td><td> "<< auxSB.s_free_blocks_count <<" </td></tr>\n"
+               "        \n"
+               "        <tr><td>s_free_inodes_count </td><td> "<< auxSB.s_free_inodes_count <<" </td></tr>\n"
+               "        <tr><td>s_mtime </td><td> "<< asctime(gmtime(&auxSB.s_mtime)) <<" </td></tr> \n"
+               "        <tr><td>s_umtime </td><td> "<< asctime(gmtime(&auxSB.s_umtime)) <<" </td></tr>\n"
+               "        <tr><td>s_mnt_count </td><td> "<< auxSB.s_mnt_count <<" </td></tr>\n"
+               "        <tr><td>s_magic </td><td> "<< auxSB.s_magic <<" </td></tr>\n"
+               "        <tr><td>s_inode_size  </td><td> "<< auxSB.s_inode_size<<" </td></tr>\n"
+               "        <tr><td>s_block_size  </td><td> "<< auxSB.s_block_size <<" </td></tr>\n"
+               "        <tr><td>s_first_ino </td><td> "<< auxSB.s_first_ino <<" </td></tr>\n"
+               "        <tr><td>s_first_blo </td><td> "<< auxSB.s_first_blo <<" </td></tr>\n"
+               "        <tr><td>s_bm_inode_start </td><td> "<< auxSB.s_bm_inode_start <<" </td></tr>\n"
+               "        <tr><td>s_bm_block_start </td><td> "<< auxSB.s_bm_block_start <<" </td></tr>\n"
+               "        <tr><td>s_inode_start </td><td> "<< auxSB.s_inode_start <<" </td></tr>\n"
+               "        <tr><td>s_block_start </td><td> "<< auxSB.s_block_start <<" </td></tr>\n"
+               "        \n"
+               "      </table>\n"
+               "        \n"
+               "    >];\n"
+               "    labelloc=\"t\";\n"
+               "    label=\"Particion: "<< part_name <<" disco: " << getNameDisk(diskPath) << " \";\n"
+               "    fontsize  = 20;\n"
+               "    };\n"
+               "}";
+
+    generateDOT("ReportSB.txt", path, content.str());
+}
+
+format ControllerReport::getPartitionStart(string path, string name) {
+    format aux;
+
+    FILE *file;
+
+    file = fopen(path.c_str(), "rb+");
+
+    MBR auxMBR;
+    fseek(file,0,SEEK_SET);
+    fread(&auxMBR, sizeof(MBR), 1, file);
+
+    int indexEBR = -1;
+    for (int i = 0; i < 4; ++i) {
+        if(auxMBR.mbr_partition[i].part_name == name) {
+            aux.start = auxMBR.mbr_partition[i].part_start;
+            aux.size = auxMBR.mbr_partition[i].part_size;
+            return aux;
+        }
+        if(auxMBR.mbr_partition[i].part_type == 'e'){
+            indexEBR = i;
+        }
+    }
+
+    EBR auxEBR;
+    /*If it is different of -1 then is EBR partition*/
+    if(indexEBR != -1){
+        fseek(file, auxMBR.mbr_partition[indexEBR].part_start, SEEK_SET);
+        fread(&auxEBR, sizeof(EBR), 1, file);
+        while(auxEBR.part_next != -1){
+            if(auxEBR.part_name == name){
+                aux.start = auxEBR.part_start;
+                aux.size = auxEBR.part_size;
+                return aux;
+            }
+            fseek(file, auxEBR.part_next, SEEK_SET);
+            fread(&auxEBR, sizeof(EBR), 1, file);
+        }
+        // checking current EBR
+        if(auxEBR.part_name == name){
+            aux.start = auxEBR.part_start;
+            aux.size = auxEBR.part_size;
+            return aux;
+        }
+    }
+    fclose(file);
+    return aux;
+}
+
+string ControllerReport::getNameDisk(string path) {
+    string nameDisk;
+
+    const size_t last_slash = path.rfind('/');
+    if(string::npos != last_slash){
+        nameDisk = path.substr(last_slash+1,path.length()-1);
+    }
+    return nameDisk;
 }

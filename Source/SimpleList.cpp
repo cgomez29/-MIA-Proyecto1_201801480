@@ -126,16 +126,16 @@ int SimpleList::checkNumberMount(string path) {
     }
 }
 
-string SimpleList::existsMount(string id) {
+Mount* SimpleList::existsMount(string id) {
     Mount* aux = this->head;
     while (aux != NULL){
         if(aux->getId() == id){
-            return aux->getPath();
+            return aux;
         }
         aux = aux->getNext();
     }
     cout << "\nERROR: Partición no montada.\n" << endl;
-    return "";
+    return NULL;
 }
 
 Mount* SimpleList::existsMountObject(string id) {

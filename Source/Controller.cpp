@@ -66,6 +66,11 @@ void Controller::command(Node *root) {
             fileSystem->makeMKFS(root);
             return;
         }
+    } else if(root->type == "EXEC") {
+        if(commandChecker->checkEXEC(root)) {
+            executeEXEC(root);
+            return;
+        }
     }
     cout << "Comando no valido" << endl;
 }
@@ -736,12 +741,12 @@ void Controller::executeREP() {
         counter++;
     }
 
-    string pathDisk = listMount->getInstance()->existsMount(id);
-    if(pathDisk != ""){
+    Mount* auxMount = listMount->getInstance()->existsMount(id);
+    if(auxMount != NULL){
         if(name == "MBR" || name == "mbr"){
-            controllerReport->reportMBR(pathDisk,path);
+            controllerReport->reportMBR(auxMount->getPath() ,path);
         } else if(name == "DISK" || name == "disk"){
-            controllerReport->reportDISK(pathDisk,path);
+            controllerReport->reportDISK(auxMount->getPath(),path);
         } else if(name == "INODE" || name == "inode"){
         } else if(name == "Journaling" || name == "journaling"){
         } else if(name == "BLOCK" || name == "block"){
@@ -749,10 +754,29 @@ void Controller::executeREP() {
         } else if(name == "bm_block" || name == "BM_BLOCK"){
         } else if(name == "tree" || name == "TREE"){
         } else if(name == "sb" || name == "SB"){
-            controllerReport->reportSuperBloque(pathDisk, path);
+            controllerReport->reportSuperBloque(auxMount->getPath(), auxMount->getName(), path);
         } else if(name == "file" || name == "FILE"){
         } else if(name == "ls" || name == "ls"){
         }
+    }
+}
+
+void Controller::executeEXEC(Node *root) {
+    list<Node> :: iterator aux;
+    aux = root->childs.begin()->childs.begin();
+    int counter = 0;
+    string line;
+    while(counter < root->childs.begin()->count) {
+        if(aux->type == "PATH"){
+            ifstream file_input(aux->value);
+            while(getline(file_input, line)){
+                readCommand(line);
+            }
+            msj("Script ejecutado correctamente!");
+            break;
+        }
+        aux++;
+        counter++;
     }
 }
 

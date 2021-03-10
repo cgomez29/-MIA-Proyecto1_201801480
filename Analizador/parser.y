@@ -33,6 +33,8 @@ class Node          *node;
 %token <stringVal> unmount
 %token <stringVal> mkfs
 %token <stringVal> rep
+%token <stringVal> exec
+%token <stringVal> login
 
 // Parameters
 %token <stringVal> size
@@ -80,8 +82,11 @@ class Node          *node;
 // Symbols
 %token <stringVal> equals
 
-// Non Terminals
+// for Login
+%token <stringVal> usuario
+%token <stringVal> password
 
+// Non Terminals
 %type <node> Start
 %type <node> Commands
 %type <node> MKParams
@@ -94,6 +99,10 @@ class Node          *node;
 %type <node> MKFSParam
 %type <node> REPParams
 %type <node> REPParam
+%type <node> EXECParams
+%type <node> EXECParam
+%type <node> LOGINParams
+%type <node> LOGINParam
 
 %start Start
 
@@ -109,10 +118,12 @@ Commands
     | rmdisk path equals v_string   { $$ = new Node("RMDISK", $4); }
     | fdisk FParams                 { $$ = new Node("FDISK", ""); $$->add(*$2); }
     | mount MOUNTParams             { $$ = new Node("MOUNT", ""); $$->add(*$2); }
-    | unmount id equals v_id2       { $$ = new Node("UNMOUNT", $4); }
     | unmount id equals v_string    { $$ = new Node("UNMOUNT", $4); }
+    | unmount id equals v_id2       { $$ = new Node("UNMOUNT", $4); }
     | mkfs MKFSParams               { $$ = new Node("MKFS", ""); $$->add(*$2); }
-    | rep REPParams               { $$ = new Node("REP", ""); $$->add(*$2); }
+    | rep REPParams                 { $$ = new Node("REP", ""); $$->add(*$2); }
+    | exec EXECParams               { $$ = new Node("EXEC", ""); $$->add(*$2); }
+    | login LOGINParams             { $$ = new Node("LOGIN", ""); $$->add(*$2); }
     ;
     
 MKParams 
@@ -184,7 +195,7 @@ MKFSParam
 
 REPParams
     : REPParams REPParam { $$ = $1; $$->add(*$2); }
-    | REPParam            { $$ =  new Node ("PARAM", ""); $$->add(*$1); }
+    | REPParam           { $$ =  new Node ("PARAM", ""); $$->add(*$1); }
     ;
 
 REPParam
@@ -196,4 +207,30 @@ REPParam
     | name equals v_string  { $$ =  new Node("NAME", $3); }
     | ruta equals v_id       { $$ =  new Node("RUTA", $3); }
     | ruta equals v_string  { $$ =  new Node("RUTA", $3); }
+    ;
+
+EXECParams
+    : EXECParams EXECParam  { $$ = $1; $$->add(*$2); }
+    | EXECParam             { $$ =  new Node ("PARAM", ""); $$->add(*$1); }
+    ;
+
+EXECParam
+    : path equals route     { $$ = new Node("PATH", $3); }
+    | path equals v_string  { $$ = new Node("PATH", $3); }
+    ;
+
+LOGINParams
+    : LOGINParams LOGINParam  { $$ = $1; $$->add(*$2); }
+    | LOGINParam              { $$ =  new Node ("PARAM", ""); $$->add(*$1); }
+    ;
+
+LOGINParam
+    : usuario equals v_id        { $$ = new Node("USUARIO", $3); }
+    | usuario equals v_id2       { $$ = new Node("USUARIO", $3); }
+    | usuario equals v_string    { $$ = new Node("USUARIO", $3); }
+    | password equals v_id       { $$ = new Node("PASSWORD", $3); }
+    | password equals v_id2      { $$ = new Node("PASSWORD", $3); }
+    | password equals v_string   { $$ = new Node("PASSWORD", $3); }
+    | id equals v_string         { $$ = new Node("ID", $3); }
+    | id equals v_id2            { $$ = new Node("ID", $3); }
     ;

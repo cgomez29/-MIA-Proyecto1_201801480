@@ -186,3 +186,30 @@ bool CommandChecker::checkMKFS(Node *root) {
     cout << "\nEl parámetro ID es obligatorio!\n" << endl;
     return false;
 }
+
+bool CommandChecker::checkEXEC(Node *root) {
+    list<Node> :: iterator aux;
+    aux = root->childs.begin()->childs.begin();
+    int counter = 0;
+    while(counter < root->childs.begin()->count) {
+        if(aux->type == "PATH"){
+            if(getExtension(aux->value) == "script") {
+                return true;
+            } else {
+                cout << "\nLa extensión del archivo debe ser .script!\n" << endl;
+                return false;
+            }
+        }
+        aux++;
+        counter++;
+    }
+    cout << "\nEl parámetro PATH es obligatorio!\n" << endl;
+    return false;
+}
+
+string CommandChecker::getExtension(string path) {
+    string extension;
+    int last_dot = path.rfind(".");
+    extension = path.substr(last_dot + 1, path.length()-1);
+    return extension;
+}

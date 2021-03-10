@@ -25,7 +25,7 @@ public:
     void unMount(string id);
     char checkLetterMount(string);
     int checkNumberMount(string);
-    string existsMount(string);
+    Mount* existsMount(string);
     Mount* existsMountObject(string);
 };
 

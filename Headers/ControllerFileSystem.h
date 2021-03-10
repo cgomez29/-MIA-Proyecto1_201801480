@@ -15,6 +15,7 @@
 #include "CommandChecker.h"
 #include "SimpleList.h"
 #include "Mount.h"
+#include "Structure.h"
 
 extern Node * root;
 
@@ -104,11 +105,6 @@ struct EBR
     char part_name[16];
 };
 
-struct format{
-    int size = 0;
-    int start = 0;
-};
-
 class ControllerFileSystem {
 private:
     SimpleList* listMount = SimpleList::getInstance();
@@ -122,6 +118,7 @@ public:
     void formatEXT2(string path, string name);
     void formatEXT3(string path, string name);
     format getPartitionStart(string path, string name);
+
 };
 
 

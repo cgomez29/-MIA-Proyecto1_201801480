@@ -44,19 +44,44 @@ void ControllerFileSystem::formatEXT2(string path, string name) {
     format auxformat = getPartitionStart(path, name);
 
     SuperBlock sblock;
-    sblock.s_filesystem_type = 2;
     /*Cantidad de inodos*/
-    int n = floor((auxformat.size - sizeof(SuperBlock))/(1+3+sizeof(InodeTable)+3*sizeof(FileBlock)));
-    sblock.s_inodes_count = n;
-    sblock.s_blocks_count = 3*n;
-    //INODOS n*45
-    sblock.s_inode_size = n*45;
-    //BLOQUES n*3*64
-    sblock.s_block_size = n*3*64;
+    int n = floor((auxformat.size - sizeof(SuperBlock))/(1+3+sizeof(InodeTable)+3*sizeof(FolderBlock)));
+    int bm_inode_start = auxformat.start + sizeof(SuperBlock);
+    int bm_block_start = bm_inode_start + n;
+    int inode_start = bm_block_start + 3 * n;
+    int block_start = inode_start + n*sizeof(InodeTable);
 
-    sblock.s_magic = 0xEF53;
+    sblock.s_filesystem_type = 2; // EXT2 Sistema de archivos utilizado
+    sblock.s_inodes_count = n; // Número total de inodos
+    sblock.s_blocks_count = 3*n; // Número total de bloques
+    sblock.s_free_blocks_count = 3*n; // Número de bloques libres
+    sblock.s_free_inodes_count = n; // Número de inodos libres
+    sblock.s_mtime = time(0); // Última fecha en el que el sistema fue montado
+    sblock.s_umtime = time(0); // Última fecha en el que el sistema fue desmontado
+    sblock.s_mnt_count = 0; // Indica cuantas veces se ha montado el sistema
+    sblock.s_magic = 0xEF53; // Valor que identifica al sistema de archivos
+    sblock.s_inode_size = sizeof(InodeTable); // Tamaño del inodo
+    sblock.s_block_size = sizeof(FolderBlock); // Tamaño del bloque
+    sblock.s_first_ino = 0; // Primer inodo libre
+    sblock.s_first_blo = 0; // Primer bloque libre
+    sblock.s_bm_inode_start = bm_inode_start; // Inicio del bitmap de inodos
+    sblock.s_bm_block_start = bm_block_start; // Inicio del bitmap de bloques
+    sblock.s_inode_start = inode_start; // Inicio de la tabla de inodos
+    sblock.s_block_start = block_start; // Inido de la tabla de bloques
 
-    cout << "\n"<< to_string(sblock.s_inodes_count)<< "\n" << endl;
+    FILE *file;
+    file = fopen(path.c_str(), "rb+");
+
+    fseek(file, auxformat.start, SEEK_SET);
+    fwrite(&sblock, sizeof(SuperBlock), 1, file);
+    char cero = '0';
+    for (int i = 0; i < sblock.s_inodes_count; ++i) {
+        fwrite(&cero, 1,1, file);
+    }
+    for (int i = 0; i < sblock.s_blocks_count; ++i) {
+        fwrite(&cero, 1,1, file);
+    }
+    fclose(file);
 }
 
 void ControllerFileSystem::formatEXT3(string path, string name) {

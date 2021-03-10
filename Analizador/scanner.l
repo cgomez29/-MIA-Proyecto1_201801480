@@ -26,8 +26,10 @@ v_string ("\""[^"\""]*"\"")
 "unmount"  {return unmount;}
 "mkfs"     {return mkfs;}
 "rep"      {return rep;}
+"exec"     {return exec;}
+"login"    {return login;}
 
-"="             {return equals;}
+"="         {return equals;}
 
 "-size"     {return size;}
 "-f"        {return f;}
@@ -53,6 +55,8 @@ v_string ("\""[^"\""]*"\"")
 "2fs" {return dosfs;}
 "3fs" {return tresfs;}
 "-ruta" {return ruta;}
+"-usuario" {return usuario;}
+"-password" {return password;}
 
 {v_integer}      {strcpy(yylval.stringVal, yytext); return v_integer;}
 {v_string}       {strcpy(yylval.stringVal, yytext); return v_string;}
