@@ -11,6 +11,8 @@
 #include <sstream>
 #include <cctype>
 #include <math.h>
+#include <stdio.h>
+#include <string.h>
 #include "Node.h"
 #include "CommandChecker.h"
 #include "SimpleList.h"
@@ -42,15 +44,15 @@ struct SuperBlock {
 };
 
 struct InodeTable {
-    int i_uid;
-    int i_gid;
-    int i_size;
-    time_t i_atime;
-    time_t i_ctime;
-    time_t i_mtime;
-    int i_block[15];
-    char i_type;
-    int i_perm;
+    int i_uid = -1; //UID del usuario porpietario del archivo o carpeta
+    int i_gid = -1; //GID del grupo al que pertence el archivo o carpeta
+    int i_size = -1; //Tamaño del archivo
+    time_t i_atime; // Fecha en que se leyo el inodo
+    time_t i_ctime; // fecha en que se creo el inodo
+    time_t i_mtime; // Ultima fecha en la que se modifico el inodo
+    int i_block[15]; // Bloques
+    char i_type = -1; // Archivo = 1, Carpeta = 0
+    int i_perm; // Permisos
 };
 /* FOLDER BLOCK */
 struct Content{
@@ -119,6 +121,7 @@ public:
     void formatEXT3(string path, string name);
     format getPartitionStart(string path, string name);
 
+    void fileSystemInit(string path, int inode_start, int block_start);
 };
 
 

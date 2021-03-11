@@ -294,6 +294,7 @@ void ControllerReport::reportSuperBloque(string diskPath, string part_name, stri
                "    };\n"
                "}";
 
+    fclose(file);
     generateDOT("ReportSB.txt", path, content.str());
 }
 
@@ -354,3 +355,77 @@ string ControllerReport::getNameDisk(string path) {
     }
     return nameDisk;
 }
+
+void ControllerReport::reportTree(string diskPath, string part_name, string path) {
+    /* return the partition start and size */
+    format partition = getPartitionStart(diskPath, part_name);
+
+    FILE *file;
+    file = fopen(diskPath.c_str(), "rb+");
+    SuperBlock sb;
+    fseek(file, partition.start, SEEK_SET);
+    fread(&sb, sizeof(SuperBlock), 1, file);
+
+    stringstream content;
+    content << "digraph {\n"
+               " node[ shape = none, fontname = \"Arial\" ];";
+
+    /*ROOT*/
+    InodeTable inodo;
+    fseek(file, sb.s_inode_start, SEEK_SET);
+    fread(&inodo, sizeof(InodeTable),1, file);
+
+    graphTreeInodo(&content, inodo, file, sb.s_inode_start, sb.s_block_start);
+
+    content << "}";
+
+    fclose(file);
+    generateDOT("ReportTREE.txt", path, content.str());
+}
+
+void ControllerReport::graphTreeInodo(stringstream *cadena, InodeTable padre, FILE *file, int inode_start, int block_start) {
+    *cadena << "ino0 [\n"
+               "    label=<\n"
+               "    <table color='black' cellspacing='0'>\n"
+               "            <tr><td bgcolor=\"gray\">Inodo  </td><td bgcolor=\"gray\"> 0 </td></tr>\n"
+               "            <tr><td>i_uid</td><td> </td></tr>\n"
+               "            <tr><td>i_gid</td><td> </td></tr>\n"
+               "            <tr><td>i_size</td><td> </td></tr>\n"
+               "            <tr><td>i_atime</td><td> </td></tr>\n"
+               "            <tr><td>i_ctime</td><td> </td></tr>\n"
+               "            <tr><td>i_mtime </td><td> </td></tr>\n";
+
+    for (int i = 0; i < 15; ++i) {
+        *cadena << "            <tr><td>i_block[ ] </td><td PORT=\"0\"> </td></tr>\n";
+    }
+    *cadena << "            <tr><td> i_type </td><td> </td></tr>\n"
+               "            <tr><td>i_perm </td><td> </td></tr>\n"
+               "    </table>        \n"
+               "    >];";
+
+    for (int i = 0; i < 13; ++i) {
+        if(padre.i_block[i] != -1) {
+            if(padre.i_type == 0){
+                fseek(file, inode_start+(sizeof(InodeTable)*padre.i_block[i]+1), SEEK_SET);
+                FolderBlock aux;
+                fread(&aux, sizeof(FolderBlock), 1, file);
+                graphTreeFolderBlock(cadena, aux, file, inode_start, block_start);
+            } else {
+
+            }
+        }
+    }
+}
+
+void ControllerReport::graphTreeFolderBlock(stringstream *cadena, FolderBlock actual, FILE *file, int inode_start, int block_start) {
+    *cadena << "PONER TABLA DE BLOQUE";
+    for (int i = 0; i < 4; ++i) {
+        if(actual.b_content[i].b_inodo != -1){
+            fseek(file, 0, SEEK_SET);
+            InodeTable aux;
+            fread(&aux, block_start + (sizeof(InodeTable) * actual.b_content[i].b_inodo), 1, file);
+            graphTreeInodo(cadena, aux, file, inode_start, block_start);
+        }
+    }
+}
+

@@ -65,6 +65,40 @@ private:
         int s_block_start;
     };
 
+    struct InodeTable {
+        int i_uid = -1; //UID del usuario porpietario del archivo o carpeta
+        int i_gid = -1; //GID del grupo al que pertence el archivo o carpeta
+        int i_size = -1; //Tamaño del archivo
+        time_t i_atime; // Fecha en que se leyo el inodo
+        time_t i_ctime; // fecha en que se creo el inodo
+        time_t i_mtime; // Ultima fecha en la que se modifico el inodo
+        int i_block[15]; // Bloques
+        char i_type = -1; // Archivo = 1, Carpeta = 0
+        int i_perm; // Permisos
+    };
+
+/* FOLDER BLOCK */
+    struct Content{
+        char b_name[12];
+        int b_inodo;
+    };
+
+    struct FolderBlock{
+        Content b_content[4];
+    };
+
+/* FILE BLOCK */
+
+    struct FileBlock {
+        char b_content[64];
+    };
+
+/*POINTER BLOCK*/
+
+    struct PointerBlock{
+        int b_pointers[16];
+    };
+
     string getTypeExt(string);
     void generateDOT(string, string, string);
 
@@ -72,8 +106,12 @@ public:
     void reportMBR(string diskPath, string path);
     void reportDISK(string diskPath, string path);
     void reportSuperBloque(string diskPath, string part_name, string path);
+    void reportTree(string diskPath, string part_name, string path);
     format getPartitionStart(string path, string name);
     string getNameDisk(string path);
+    void graphTreeInodo(stringstream *cadena, InodeTable padre, FILE *file, int inode_start, int block_start);
+    void graphTreeFolderBlock(stringstream *cadena, FolderBlock actual, FILE *file, int inode_start, int block_start);
+
 };
 
 

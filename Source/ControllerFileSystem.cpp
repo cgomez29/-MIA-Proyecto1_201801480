@@ -81,6 +81,15 @@ void ControllerFileSystem::formatEXT2(string path, string name) {
     for (int i = 0; i < sblock.s_blocks_count; ++i) {
         fwrite(&cero, 1,1, file);
     }
+
+    /**
+     * Se inicializan o no?*
+     *
+     * fseek(file, sblock.s_inode_start, SEEK_SET);
+    InodeTable inodeTable,*/
+
+    /* CREANDO ARCHIVO users.txt */
+    fileSystemInit(path, sblock.s_inode_start, sblock.s_block_start);
     fclose(file);
 }
 
@@ -134,3 +143,70 @@ format ControllerFileSystem::getPartitionStart(string path, string name) {
     fclose(file);
     return aux;
 }
+
+void ControllerFileSystem::fileSystemInit(string path, int inode_start, int block_start) {
+    FILE *file;
+    file = fopen(path.c_str(), "rb+");
+
+    InodeTable root; /**Inodo 0*/
+    root.i_uid = 1;
+    root.i_gid = 1;
+    root.i_size = 0;
+    root.i_atime = time(0);
+    root.i_ctime = time(0);
+    root.i_mtime = time(0);
+    for (int i = 0; i < 15; ++i) {
+        root.i_block[i] = -1;
+    }
+    root.i_type = 0;
+    root.i_perm = 664;
+    root.i_block[0] = 0; /**Apunta al bloque 0*/
+
+    fseek(file, inode_start, SEEK_SET);
+    fwrite(&root, sizeof(InodeTable), 1, file);
+
+
+    /*Creando Inodo 1 de tipo file*/
+    InodeTable inodo1; /**Inodo 1*/
+    inodo1.i_uid = 1;
+    inodo1.i_gid = 1;
+    inodo1.i_size = 0;
+    inodo1.i_atime = time(0);
+    inodo1.i_ctime = time(0);
+    inodo1.i_mtime = time(0);
+    for (int i = 0; i < 15; ++i) {
+        inodo1.i_block[i] = -1;
+    }
+    inodo1.i_type = 0;
+    inodo1.i_perm = 664;
+    inodo1.i_block[0] = 0; /**Apunta al bloque 1*/
+    fwrite(&inodo1, sizeof(InodeTable), 1, file);
+
+
+    //Escribiendo en bloques
+    fseek(file, block_start, SEEK_SET);
+
+    /*Creando bloque*/
+    FolderBlock fblock; /**Bloque 0*/
+    Content content;
+    strcpy(fblock.b_content[0].b_name, "users.txt");
+    fblock.b_content[0].b_inodo = 0;
+    strcpy(fblock.b_content[1].b_name, ".");
+    fblock.b_content[1].b_inodo = 0;
+    strcpy(fblock.b_content[2].b_name, "..");
+    fblock.b_content[2].b_inodo = 1; /**Apunta al Inodo 1*/
+    fblock.b_content[3].b_inodo = -1;
+    fwrite(&fblock, sizeof(FolderBlock), 1, file);
+
+    /*Creando blque archivo*/
+    FileBlock fileBlock; /**Bloque 1*/
+    strcpy(fileBlock.b_content, "G,root,U,root,root,123");
+    fwrite(&fileBlock, sizeof(FileBlock), 1, file);
+    fclose(file);
+}
+
+/**
+ *  > /users.txt
+ * Inode 112
+ * Bloques 64
+ * */
