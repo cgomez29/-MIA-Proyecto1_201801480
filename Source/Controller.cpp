@@ -525,23 +525,17 @@ void Controller::createLogicPartition(MBR mbr, string path, char fit, int size, 
                     checkName = false;
                     break;
                 }
-                fseek(file, auxEBR.part_start + auxEBR.part_size, SEEK_SET);
+                fseek(file, auxEBR.part_next, SEEK_SET);
                 fread(&auxEBR, sizeof(EBR),1, file);
             }
 
-
             if(checkName) { /* Checking name unique */
                 int part_next;
-                /*Estando en el ultimo EBR Se actualiza la siguiente posicion*/
                 if(auxEBR.part_next == -1){
-                    if(auxEBR.part_size == 0){
-                        part_next = auxEBR.part_start;
-                    } else {
-                        part_next = auxEBR.part_start + sizeof(EBR) + auxEBR.part_size;
-                    }
-                    /*auxEBR.part_next = part_next;
+                    part_next = auxEBR.part_start + auxEBR.part_size;
+                    auxEBR.part_next = part_next;
                     fseek(file, auxEBR.part_start, SEEK_SET);
-                    fwrite(&auxEBR, sizeof(EBR), 1, file);*/
+                    fwrite(&auxEBR, sizeof(EBR), 1, file);
                 }
 
                 EBR ebr;
@@ -753,6 +747,7 @@ void Controller::executeREP() {
         } else if(name == "bm_inode" || name == "BM_INODE"){
         } else if(name == "bm_block" || name == "BM_BLOCK"){
         } else if(name == "tree" || name == "TREE"){
+            controllerReport->reportTree(auxMount->getPath(), auxMount->getName(), path);
         } else if(name == "sb" || name == "SB"){
             controllerReport->reportSuperBloque(auxMount->getPath(), auxMount->getName(), path);
         } else if(name == "file" || name == "FILE"){
@@ -779,6 +774,3 @@ void Controller::executeEXEC(Node *root) {
         counter++;
     }
 }
-
-
-

@@ -90,6 +90,7 @@ void ControllerFileSystem::formatEXT2(string path, string name) {
 
     /* CREANDO ARCHIVO users.txt */
     fileSystemInit(path, sblock.s_inode_start, sblock.s_block_start);
+    cout << "\nFormateo EXT2 completado correctamente!!\n" << endl;
     fclose(file);
 }
 
@@ -158,13 +159,12 @@ void ControllerFileSystem::fileSystemInit(string path, int inode_start, int bloc
     for (int i = 0; i < 15; ++i) {
         root.i_block[i] = -1;
     }
-    root.i_type = 0;
+    root.i_type = '0';
     root.i_perm = 664;
     root.i_block[0] = 0; /**Apunta al bloque 0*/
 
     fseek(file, inode_start, SEEK_SET);
     fwrite(&root, sizeof(InodeTable), 1, file);
-
 
     /*Creando Inodo 1 de tipo file*/
     InodeTable inodo1; /**Inodo 1*/
@@ -177,11 +177,10 @@ void ControllerFileSystem::fileSystemInit(string path, int inode_start, int bloc
     for (int i = 0; i < 15; ++i) {
         inodo1.i_block[i] = -1;
     }
-    inodo1.i_type = 0;
+    inodo1.i_type = '1';
     inodo1.i_perm = 664;
-    inodo1.i_block[0] = 0; /**Apunta al bloque 1*/
+    inodo1.i_block[0] = 1; /**Apunta al bloque 1*/
     fwrite(&inodo1, sizeof(InodeTable), 1, file);
-
 
     //Escribiendo en bloques
     fseek(file, block_start, SEEK_SET);
@@ -189,13 +188,19 @@ void ControllerFileSystem::fileSystemInit(string path, int inode_start, int bloc
     /*Creando bloque*/
     FolderBlock fblock; /**Bloque 0*/
     Content content;
-    strcpy(fblock.b_content[0].b_name, "users.txt");
-    fblock.b_content[0].b_inodo = 0;
-    strcpy(fblock.b_content[1].b_name, ".");
-    fblock.b_content[1].b_inodo = 0;
-    strcpy(fblock.b_content[2].b_name, "..");
+
+    strcpy(fblock.b_content[0].b_name, ".");
+    fblock.b_content[0].b_inodo = -1;
+
+    strcpy(fblock.b_content[1].b_name, "..");
+    fblock.b_content[1].b_inodo = -1;
+
+    strcpy(fblock.b_content[2].b_name, "users.txt");
     fblock.b_content[2].b_inodo = 1; /**Apunta al Inodo 1*/
+
+    strcpy(fblock.b_content[2].b_name, "");
     fblock.b_content[3].b_inodo = -1;
+
     fwrite(&fblock, sizeof(FolderBlock), 1, file);
 
     /*Creando blque archivo*/

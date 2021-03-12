@@ -71,7 +71,7 @@ void ControllerReport::reportMBR(string diskPath, string path) {
                        "     \n"
                        "    \n"
                        "    \n"
-                       "  tbl2 [\n"
+                       "  tbl" + to_string(counter) + " [\n"
                        "    label= < \n"
                        "      <table cellspacing='0' CELLPADDING=\"5\">\n"
                        "        <tr><td bgcolor=\"lightblue\"  >Nombre</td><td bgcolor=\"lightblue\">Valor</td></tr>\n"
@@ -100,7 +100,7 @@ void ControllerReport::reportMBR(string diskPath, string path) {
                    "     \n"
                    "    \n"
                    "    \n"
-                   "  tbl2 [\n"
+                   "  tbl" + to_string(counter) + " [\n"
                    "    label= < \n"
                    "      <table cellspacing='0' CELLPADDING=\"5\">\n"
                    "        <tr><td bgcolor=\"lightblue\"  >Nombre</td><td bgcolor=\"lightblue\">Valor</td></tr>\n"
@@ -375,56 +375,89 @@ void ControllerReport::reportTree(string diskPath, string part_name, string path
     fseek(file, sb.s_inode_start, SEEK_SET);
     fread(&inodo, sizeof(InodeTable),1, file);
 
-    graphTreeInodo(&content, inodo, file, sb.s_inode_start, sb.s_block_start);
+    graphTreeInodo(&content, inodo, file, sb.s_inode_start, sb.s_block_start, 0);
 
-    content << "}";
+    content << "\n}" << endl;
 
     fclose(file);
     generateDOT("ReportTREE.txt", path, content.str());
 }
 
-void ControllerReport::graphTreeInodo(stringstream *cadena, InodeTable padre, FILE *file, int inode_start, int block_start) {
-    *cadena << "ino0 [\n"
+void ControllerReport::graphTreeInodo(stringstream *cadena, InodeTable padre, FILE *file, int inode_start, int block_start,
+                                      int numero_inodo) {
+    *cadena << "\nino"<<numero_inodo<<" [\n"
                "    label=<\n"
                "    <table color='black' cellspacing='0'>\n"
-               "            <tr><td bgcolor=\"gray\">Inodo  </td><td bgcolor=\"gray\"> 0 </td></tr>\n"
-               "            <tr><td>i_uid</td><td> </td></tr>\n"
-               "            <tr><td>i_gid</td><td> </td></tr>\n"
-               "            <tr><td>i_size</td><td> </td></tr>\n"
-               "            <tr><td>i_atime</td><td> </td></tr>\n"
-               "            <tr><td>i_ctime</td><td> </td></tr>\n"
-               "            <tr><td>i_mtime </td><td> </td></tr>\n";
+               "            <tr><td bgcolor=\"gray\" PORT=\""<<numero_inodo<<"""\">Inodo</td><td bgcolor=\"gray\">"<<numero_inodo<<" </td></tr>\n"
+               "            <tr><td>i_uid</td><td> "<< padre.i_uid <<" </td></tr>\n"
+               "            <tr><td>i_gid</td><td> "<< padre.i_gid <<" </td></tr>\n"
+               "            <tr><td>i_size</td><td> "<< padre.i_size <<" </td></tr>\n"
+               "            <tr><td>i_atime</td><td> "<< asctime(gmtime(&padre.i_atime)) <<" </td></tr>\n"
+               "            <tr><td>i_ctime</td><td> "<< asctime(gmtime(&padre.i_ctime)) <<" </td></tr>\n"
+               "            <tr><td>i_mtime </td><td> "<< asctime(gmtime(&padre.i_mtime)) <<" </td></tr>\n";
 
     for (int i = 0; i < 15; ++i) {
-        *cadena << "            <tr><td>i_block[ ] </td><td PORT=\"0\"> </td></tr>\n";
+        if(padre.i_block[i] != -1) {
+            *cadena << "<tr><td>i_block[" << i+1 << "] </td><td PORT=\"c"<< padre.i_block[i] <<"\">"<<padre.i_block[i]<<"</td></tr>\n";
+        } else {
+            *cadena << "<tr><td>i_block[" << i+1 << "] </td><td>"<<padre.i_block[i]<<"</td></tr>\n";
+        }
     }
-    *cadena << "            <tr><td> i_type </td><td> </td></tr>\n"
-               "            <tr><td>i_perm </td><td> </td></tr>\n"
+    *cadena << "            <tr><td> i_type </td><td> "<< padre.i_type <<" </td></tr>\n"
+               "            <tr><td>i_perm </td><td> "<< padre.i_perm <<" </td></tr>\n"
                "    </table>        \n"
-               "    >];";
+               "    >];\n";
+    *cadena << "ino"<< numero_inodo <<":c"<<numero_inodo<<" -> bl"<<numero_inodo<<":"<<numero_inodo<<" ;\n";
 
     for (int i = 0; i < 13; ++i) {
         if(padre.i_block[i] != -1) {
-            if(padre.i_type == 0){
-                fseek(file, inode_start+(sizeof(InodeTable)*padre.i_block[i]+1), SEEK_SET);
+            if(padre.i_type == '0'){
+                fseek(file, block_start+((int) sizeof(FolderBlock)*padre.i_block[i]), SEEK_SET);
                 FolderBlock aux;
                 fread(&aux, sizeof(FolderBlock), 1, file);
-                graphTreeFolderBlock(cadena, aux, file, inode_start, block_start);
+                graphTreeFolderBlock(cadena, aux, file, inode_start, block_start, padre.i_block[i]);
             } else {
-
+                fseek(file, block_start+((int) sizeof(FileBlock)*padre.i_block[i]), SEEK_SET);
+                FileBlock fileBlock;
+                fread(&fileBlock, sizeof(FileBlock), 1, file);
+                *cadena << "bl"<< numero_inodo <<"[\n"
+                           "    label=<\n"
+                           "        <table color='black' cellspacing='0'>\n"
+                           "            <tr><td bgcolor=\"gold2\" PORT=\"1\">Bloque  </td><td bgcolor=\"gold2\"> 1 </td></tr>\n"
+                           "            <tr><td> b_content </td><td> "<< fileBlock.b_content <<" </td></tr>\n"
+                           "       \n"
+                           "        </table>\n"
+                           "    >];\n";
             }
         }
     }
 }
 
-void ControllerReport::graphTreeFolderBlock(stringstream *cadena, FolderBlock actual, FILE *file, int inode_start, int block_start) {
-    *cadena << "PONER TABLA DE BLOQUE";
+void ControllerReport::graphTreeFolderBlock(stringstream *cadena, FolderBlock actual, FILE *file, int inode_start,
+                                            int block_start, int numero_block) {
+    *cadena << "bl"<< numero_block <<"  [\n"
+               "    label=<\n"
+               "        <table color='black' cellspacing='0'>\n"
+               "            <tr><td bgcolor=\"greenyellow\" PORT=\""<<numero_block<<"\">Bloque  </td><td bgcolor=\"greenyellow\"> 0 </td></tr>\n"
+               "            <tr><td>Name</td><td>Inodo </td></tr>\n";
     for (int i = 0; i < 4; ++i) {
         if(actual.b_content[i].b_inodo != -1){
-            fseek(file, 0, SEEK_SET);
+            *cadena << "    <tr><td> "<<actual.b_content[i].b_name<<" </td><td PORT=\""<< actual.b_content[i].b_inodo <<
+            "\"> "<<actual.b_content[i].b_inodo<<"</td></tr>\n";
+        } else {
+            *cadena << "    <tr><td> "<<actual.b_content[i].b_name<<" </td><td>"<<actual.b_content[i].b_inodo<<"</td></tr>\n";
+        }
+    }
+    *cadena << "        </table>\n"
+               "    >];\n";
+
+    for (int i = 0; i < 4; ++i) {
+        if(actual.b_content[i].b_inodo != -1){
             InodeTable aux;
-            fread(&aux, block_start + (sizeof(InodeTable) * actual.b_content[i].b_inodo), 1, file);
-            graphTreeInodo(cadena, aux, file, inode_start, block_start);
+            fseek(file, inode_start + ((int) sizeof(InodeTable) * actual.b_content[i].b_inodo), SEEK_SET);
+            fread(&aux, sizeof(InodeTable), 1, file);
+            *cadena << "bl"<<numero_block<<":"<<actual.b_content[i].b_inodo << " -> ino"<< actual.b_content[i].b_inodo <<":"<< actual.b_content[i].b_inodo<< " ;\n";
+            graphTreeInodo(cadena, aux, file, inode_start, block_start, actual.b_content[i].b_inodo);
         }
     }
 }

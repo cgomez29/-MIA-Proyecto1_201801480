@@ -73,7 +73,7 @@ private:
         time_t i_ctime; // fecha en que se creo el inodo
         time_t i_mtime; // Ultima fecha en la que se modifico el inodo
         int i_block[15]; // Bloques
-        char i_type = -1; // Archivo = 1, Carpeta = 0
+        char i_type = '0'; // Archivo = 1, Carpeta = 0
         int i_perm; // Permisos
     };
 
@@ -101,6 +101,10 @@ private:
 
     string getTypeExt(string);
     void generateDOT(string, string, string);
+    void graphTreeInodo(stringstream *cadena, InodeTable padre, FILE *file, int inode_start, int block_start,
+                        int numero_inodo);
+    void graphTreeFolderBlock(stringstream *cadena, FolderBlock actual, FILE *file, int inode_start, int block_start,
+                              int numero_block);
 
 public:
     void reportMBR(string diskPath, string path);
@@ -109,9 +113,6 @@ public:
     void reportTree(string diskPath, string part_name, string path);
     format getPartitionStart(string path, string name);
     string getNameDisk(string path);
-    void graphTreeInodo(stringstream *cadena, InodeTable padre, FILE *file, int inode_start, int block_start);
-    void graphTreeFolderBlock(stringstream *cadena, FolderBlock actual, FILE *file, int inode_start, int block_start);
-
 };
 
 
