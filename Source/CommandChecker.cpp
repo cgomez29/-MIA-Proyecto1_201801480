@@ -203,7 +203,7 @@ bool CommandChecker::checkEXEC(Node *root) {
         aux++;
         counter++;
     }
-    cout << "\nEl parámetro PATH es obligatorio!\n" << endl;
+    cout << "\nEXEC: El parámetro PATH es obligatorio!\n" << endl;
     return false;
 }
 
@@ -212,4 +212,43 @@ string CommandChecker::getExtension(string path) {
     int last_dot = path.rfind(".");
     extension = path.substr(last_dot + 1, path.length()-1);
     return extension;
+}
+
+bool CommandChecker::checkMKDIR(Node *root) {
+    list<Node> :: iterator aux;
+    aux = root->childs.begin()->childs.begin();
+    int counter = 0;
+    while(counter < root->childs.begin()->count) {
+        if(aux->type == "PATH"){
+            return true;
+        }
+        aux++;
+        counter++;
+    }
+    cout << "\n MKDIR: El parámetro PATH es obligatorio!\n" << endl;
+    return false;
+}
+
+bool CommandChecker::checkLOGIN(Node *root) {
+    list<Node> :: iterator aux;
+    aux = root->childs.begin()->childs.begin();
+    int counter = 0;
+    bool flagUser = false, flagPass = false, flagId = false;
+    while(counter < root->childs.begin()->count) {
+        if(aux->type == "USUARIO"){
+            flagUser = true;
+        } else if(aux->type == "PASSWORD") {
+            flagPass = true;
+        } else if(aux->type == "ID") {
+            flagId = true;
+        }
+        aux++;
+        counter++;
+    }
+
+    if(flagUser && flagPass && flagId) {
+        return true;
+    }
+    cout << "\n LOGIN: Los parametros usuario, password y id son obligatorios!\n" << endl;
+    return false;
 }

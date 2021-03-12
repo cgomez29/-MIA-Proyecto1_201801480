@@ -71,7 +71,18 @@ void Controller::command(Node *root) {
             executeEXEC(root);
             return;
         }
+    } else if(root->type == "MKDIR") {
+        if(commandChecker->checkMKDIR(root)) {
+            makeMKDIR(root);
+            return;
+        }
+    } else if(root->type == "LOGIN") {
+        if(commandChecker->checkLOGIN(root)) {
+            makeLOGIN(root);
+            return;
+        }
     }
+
     cout << "Comando no valido" << endl;
 }
 
@@ -734,8 +745,9 @@ void Controller::executeREP() {
         aux++;
         counter++;
     }
-
-    Mount* auxMount = listMount->getInstance()->existsMount(id);
+    int size = id.length()-1;
+    string id2 = id.substr(0,size) + (char) toupper(id[size]);
+    Mount* auxMount = listMount->getInstance()->existsMount(id2);
     if(auxMount != NULL){
         if(name == "MBR" || name == "mbr"){
             controllerReport->reportMBR(auxMount->getPath() ,path);
@@ -774,3 +786,56 @@ void Controller::executeEXEC(Node *root) {
         counter++;
     }
 }
+
+void Controller::makeMKDIR(Node *root) {
+    list<Node> :: iterator aux;
+    aux = root->childs.begin()->childs.begin();
+    int counter = 0;
+    string path = "";
+    string p = "";
+    while(counter < root->childs.begin()->count) {
+        if(aux->type == "PATH"){
+            path = aux->value;
+        } else if(aux->type == "P"){
+            p = aux->value;
+        }
+        aux++;
+        counter++;
+    }
+
+    /* El tercer parametro indica el ID de la particion
+     *  que esta siendo utilizada */
+    if(userLogin.id != ""){
+        fileSystem->executeMKDIR(path, p, userLogin.id);
+    } else {
+        cout << "\n** NO A INICIADO SESIÓN **\n" << endl;
+    }
+}
+
+void Controller::makeLOGIN(Node *root) {
+    list<Node> :: iterator aux;
+    aux = root->childs.begin()->childs.begin();
+    int counter = 0;
+    while(counter < root->childs.begin()->count) {
+        if(aux->type == "USUARIO"){
+            userLogin.user = aux->value;
+        } else if(aux->type == "PASSWORD") {
+            //TODO pendiente
+        } else if(aux->type == "ID") {
+            userLogin.id = aux->value;
+        }
+        aux++;
+        counter++;
+    }
+    int size = userLogin.id.length()-1;
+    string id2 = userLogin.id.substr(0,size) + (char) toupper(userLogin.id[size]);
+    Mount* auxMount = listMount->getInstance()->existsMount(id2);
+
+    if(auxMount == NULL){
+        cout << "\n Partición: "<< id2 << " No se encuentra montada!\n" << endl;
+    } else {
+        cout << "\n** BIENVENIDO **" << endl;
+        cout << "\n "<< "USUARIO: " << userLogin.user <<" \n" << endl;
+    }
+}
+

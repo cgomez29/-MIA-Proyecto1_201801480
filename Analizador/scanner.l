@@ -13,6 +13,7 @@ v_integer ("-")?[0-9]+
 v_id ([a-zA-Z_])[a-zA-Z0-9_]*
 v_id2 ([a-zA-Z_]*)[a-zA-Z0-9_]*
 route ("/"{v_id})+("/"{v_id}"."{v_id})
+route2 ("/"{v_id})+("/"{v_id})
 v_string ("\""[^"\""]*"\"")
 
 %%
@@ -28,6 +29,7 @@ v_string ("\""[^"\""]*"\"")
 "rep"      {return rep;}
 "exec"     {return exec;}
 "login"    {return login;}
+"mkdir"    {return mkdir;}
 
 "="         {return equals;}
 
@@ -57,12 +59,14 @@ v_string ("\""[^"\""]*"\"")
 "-ruta" {return ruta;}
 "-usuario" {return usuario;}
 "-password" {return password;}
+"-p" {return p;}
 
 {v_integer}      {strcpy(yylval.stringVal, yytext); return v_integer;}
 {v_string}       {strcpy(yylval.stringVal, yytext); return v_string;}
 {v_id}            {strcpy(yylval.stringVal, yytext); return v_id;}
 {v_id2}            {strcpy(yylval.stringVal, yytext); return v_id2;}
 {route}         {strcpy(yylval.stringVal, yytext); return route;}
+{route2}         {strcpy(yylval.stringVal, yytext); return route2;}
 (\s|\r|\t|\n)+   {}
 [[:blank:]]     {}
 .               {

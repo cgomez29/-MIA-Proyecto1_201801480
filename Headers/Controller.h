@@ -65,10 +65,18 @@ private:
         char part_name[16];
     };
 
+    struct login {
+        string user;
+        string id = "";
+    };
+
     CommandChecker *commandChecker = new CommandChecker();
     ControllerReport *controllerReport = new ControllerReport();
     ControllerFileSystem *fileSystem = new ControllerFileSystem();
     SimpleList* listMount = SimpleList::getInstance();
+
+    /*LOGIN*/
+    login userLogin;
 
     static void msj(string mensaje);
     char nulo = '\0';
@@ -94,9 +102,9 @@ private:
     void executeMount(string path, string name);
     void makeUnMount(Node *root);
     void executeUnMount(string id);
-
     void executeEXEC(Node *root);
-
+    void makeMKDIR(Node *root);
+    void makeLOGIN(Node *root);
 
     /**
      * REPORTS

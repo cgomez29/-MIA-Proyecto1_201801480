@@ -18,9 +18,9 @@ public:
     bool checkREP(Node *root);
     bool checkMKFS(Node *root);
     bool checkEXEC(Node *root);
-
+    bool checkMKDIR(Node *root);
+    bool checkLOGIN(Node *root);
     string getExtension(string path);
 };
-
 
 #endif //PROYECTO1_COMMANDCHECKER_H

@@ -35,6 +35,7 @@ class Node          *node;
 %token <stringVal> rep
 %token <stringVal> exec
 %token <stringVal> login
+%token <stringVal> mkdir
 
 // Parameters
 %token <stringVal> size
@@ -55,6 +56,7 @@ class Node          *node;
 %token <stringVal> v_id
 %token <stringVal> v_id2
 %token <stringVal> route
+%token <stringVal> route2
 
 // for -u
 %token <stringVal> k
@@ -103,6 +105,8 @@ class Node          *node;
 %type <node> EXECParam
 %type <node> LOGINParams
 %type <node> LOGINParam
+%type <node> MKDIRParams
+%type <node> MKDIRParam
 
 %start Start
 
@@ -124,6 +128,7 @@ Commands
     | rep REPParams                 { $$ = new Node("REP", ""); $$->add(*$2); }
     | exec EXECParams               { $$ = new Node("EXEC", ""); $$->add(*$2); }
     | login LOGINParams             { $$ = new Node("LOGIN", ""); $$->add(*$2); }
+    | mkdir MKDIRParams             { $$ = new Node("MKDIR", ""); $$->add(*$2); }
     ;
     
 MKParams 
@@ -231,6 +236,18 @@ LOGINParam
     | password equals v_id       { $$ = new Node("PASSWORD", $3); }
     | password equals v_id2      { $$ = new Node("PASSWORD", $3); }
     | password equals v_string   { $$ = new Node("PASSWORD", $3); }
+    | password equals v_integer   { $$ = new Node("PASSWORD", $3); }
     | id equals v_string         { $$ = new Node("ID", $3); }
     | id equals v_id2            { $$ = new Node("ID", $3); }
+    ;
+
+MKDIRParams
+    : MKDIRParams MKDIRParam  { $$ = $1; $$->add(*$2); }
+    | MKDIRParam             { $$ =  new Node ("PARAM", ""); $$->add(*$1); }
+    ;
+
+MKDIRParam
+    : path equals route2     { $$ = new Node("PATH", $3); }
+    | path equals v_string  { $$ = new Node("PATH", $3); }
+    | p                     { $$ = new Node("P", "p"); }
     ;

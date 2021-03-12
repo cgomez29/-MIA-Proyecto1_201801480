@@ -120,8 +120,9 @@ public:
     void formatEXT2(string path, string name);
     void formatEXT3(string path, string name);
     format getPartitionStart(string path, string name);
-
     void fileSystemInit(string path, int inode_start, int block_start);
+    void executeMKDIR(string path, string p, string id);
+
 };
 
 

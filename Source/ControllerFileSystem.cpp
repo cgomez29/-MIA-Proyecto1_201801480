@@ -210,8 +210,22 @@ void ControllerFileSystem::fileSystemInit(string path, int inode_start, int bloc
     fclose(file);
 }
 
+void ControllerFileSystem::executeMKDIR(string path, string p, string id) {
+    //TODO agregar carpetas
+    /**
+     *  Validar que al crear el disco auq el path no exista se cree
+     *  verificar contenido del users.txt
+     * */
+}
+
 /**
  *  > /users.txt
  * Inode 112
  * Bloques 64
+ *
+ *
+ * MKDIR pag#23
+ *
+ * Depues de formatear y haber creado el users.txt se debe de logeat para poder usar MKDIR
+ *
  * */
