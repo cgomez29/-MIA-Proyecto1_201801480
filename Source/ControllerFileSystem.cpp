@@ -233,29 +233,61 @@ void ControllerFileSystem::executeMKDIR(string dir, string p, string id) {
     InodeTable root;
     fseek(file, sb.s_inode_start, SEEK_SET);
     fread(&root, sizeof(InodeTable),1, file);
+
     //Simpre comenzamos desde el inodo raiz
     inodo_actual = 0;
 
-    //Iniciando el recorrido
-    if(dir[dir.length()-1] != '/') {
-        dir += '/';
-    }
-    string nameFolder;
-    int counter = 1;
-    while(counter < dir.length()) {
-        if(dir[counter] != '/'){
-            nameFolder += dir[counter];
-        } else {
-            //Actualizando superbloque por cada carpeta creada i/o buscada
-            fseek(file, partition.start, SEEK_SET);
-            fread(&sb, sizeof(SuperBlock), 1, file);
-            //ejecutar nombre de carpeta
-            mkdirInodo(root, file, inodo_actual, sb, partition.start, nameFolder);
-            nameFolder = "";
+    if(p=="p") {
+        //Iniciando el recorrido
+        if(dir[dir.length()-1] != '/') {
+            dir += '/';
         }
-        counter++;
+        string nameFolder;
+        int counter = 1;
+        while(counter < dir.length()) {
+            if(dir[counter] != '/'){
+                nameFolder += dir[counter];
+            } else {
+                //Actualizando superbloque por cada carpeta creada i/o buscada
+                fseek(file, partition.start, SEEK_SET);
+                fread(&sb, sizeof(SuperBlock), 1, file);
+                //ejecutar nombre de carpeta
+                mkdirInodo(root, file, inodo_actual, sb, partition.start, nameFolder);
+                nameFolder = "";
+            }
+            counter++;
+        }
+        fclose(file);
+    } else {
+        //Iniciando el recorrido
+        if(dir[dir.length()-1] != '/') {
+            dir += '/';
+        }
+        string nameFolder;
+        int counter = 1;
+        while(counter < dir.length()) {
+            if(dir[counter] != '/'){
+                nameFolder += dir[counter];
+            } else {
+                /* Para poder seguir verificando que las carpetas padre de la que va
+                 *  a crear exista se comprueba que la anterior si exista */
+                if(existFolderBlock) {
+                    //Actualizando superbloque por cada carpeta creada i/o buscada
+                    fseek(file, partition.start, SEEK_SET);
+                    fread(&sb, sizeof(SuperBlock), 1, file);
+                    //ejecutar nombre de carpeta
+                    existFolderBlock = false;
+                    mkdirInodo(root, file, inodo_actual, sb, partition.start, nameFolder);
+                    nameFolder = "";
+                } else {
+                    cout << "\n ** ERROR: La carpeta \"" << carpetaActualBuscada << "\" No existe! \n";
+                    break;
+                }
+            }
+            counter++;
+        }
+        fclose(file);
     }
-    fclose(file);
 }
 
 void ControllerFileSystem::mkdirInodo(InodeTable actual, FILE *file, int numero_inodo,
@@ -268,6 +300,9 @@ void ControllerFileSystem::mkdirInodo(InodeTable actual, FILE *file, int numero_
 
         if(actual.i_block[i] != -1){
             /** Checking if folder block */
+            //Actualizando superbloque por cada carpeta creada i/o buscada
+            fseek(file, part_start, SEEK_SET);
+            fread(&sb, sizeof(SuperBlock), 1, file);
             if(actual.i_type == '0') {
                 FolderBlock folderblock;
                 // direccionaando a nuevo bloque
@@ -288,16 +323,19 @@ void ControllerFileSystem::mkdirBlock(FolderBlock actual, FILE *file, int numero
         if (actual.b_content[i].b_inodo != -1 && strcmp(actual.b_content[i].b_name, ".") != 0 &&
             strcmp(actual.b_content[i].b_name, "..") != 0) {
             // Si el folder existe seguimos con su INODO
+            carpetaActualBuscada = nameFolder.c_str();
             if (strcmp(actual.b_content[i].b_name, nameFolder.c_str()) == 0) {
-
                 /**
-                 * SI ENTRO ES QUE LA CARPETA EXISTE
+                 * SI ENTRO ES QUE LA CARPETA EXISTE y no me sigo metiendo sino que salgo por que se en que inodo estoy
                  * */
-                InodeTable aux;
+                inodo_actual = numero_inodo;
+                folderExists = true;
+                existFolderBlock = true;
+                /*InodeTable aux;
                 fseek(file, sb.s_inode_start + ((int) sizeof(InodeTable) * actual.b_content[i].b_inodo), SEEK_SET);
                 fread(&aux, sizeof(InodeTable), 1, file);
                 folderExists = true;
-                mkdirInodo(aux, file, actual.b_content[i].b_inodo, sb, part_start, nameFolder);
+                mkdirInodo(aux, file, actual.b_content[i].b_inodo, sb, part_start, nameFolder);*/
 
             }
         }

@@ -111,7 +111,8 @@ class ControllerFileSystem {
 private:
     SimpleList* listMount = SimpleList::getInstance();
     int inodo_actual;//Para saber en que inodo comenzar a crear la nueva carpeta
-
+    bool existFolderBlock;//Para saber si la carpetas padres se deben de crear
+    string carpetaActualBuscada;
     /* For command MKDIR */
     void mkdirInodo(InodeTable padre, FILE *file, int numero_inodo, SuperBlock sb,
                     int part_start, string nameFolder);

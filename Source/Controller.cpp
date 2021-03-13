@@ -792,7 +792,7 @@ void Controller::makeMKDIR(Node *root) {
     aux = root->childs.begin()->childs.begin();
     int counter = 0;
     string path = "";
-    string p = "";
+    string p = "f";
     while(counter < root->childs.begin()->count) {
         if(aux->type == "PATH"){
             path = aux->value;

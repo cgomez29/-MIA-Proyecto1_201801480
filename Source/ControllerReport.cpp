@@ -348,7 +348,6 @@ format ControllerReport::getPartitionStart(string path, string name) {
 
 string ControllerReport::getNameDisk(string path) {
     string nameDisk;
-
     const size_t last_slash = path.rfind('/');
     if(string::npos != last_slash){
         nameDisk = path.substr(last_slash+1,path.length()-1);
@@ -407,7 +406,13 @@ void ControllerReport::graphTreeInodo(stringstream *cadena, InodeTable padre, FI
                "            <tr><td>i_perm </td><td> "<< padre.i_perm <<" </td></tr>\n"
                "    </table>        \n"
                "    >];\n";
-    *cadena << "ino"<< numero_inodo <<":c"<<numero_inodo<<" -> bl"<<numero_inodo<<":"<<numero_inodo<<" ;\n";
+
+    for (int i = 0; i < 15; ++i) {
+        if (padre.i_block[i] != -1) {
+            *cadena << "ino" << numero_inodo << ":c" << padre.i_block[i] << " -> bl" << padre.i_block[i] << ":" << padre.i_block[i]
+                    << " ;\n";
+        }
+    }
 
     for (int i = 0; i < 13; ++i) {
         if(padre.i_block[i] != -1) {
@@ -442,7 +447,7 @@ void ControllerReport::graphTreeFolderBlock(stringstream *cadena, FolderBlock ac
                "            <tr><td>Name</td><td>Inodo </td></tr>\n";
     for (int i = 0; i < 4; ++i) {
         if(actual.b_content[i].b_inodo != -1){
-            *cadena << "    <tr><td> "<<actual.b_content[i].b_name<<" </td><td PORT=\""<< actual.b_content[i].b_inodo <<
+            *cadena << "    <tr><td> "<<actual.b_content[i].b_name<<" </td><td PORT=\"b"<< actual.b_content[i].b_inodo <<
             "\"> "<<actual.b_content[i].b_inodo<<"</td></tr>\n";
         } else {
             *cadena << "    <tr><td> "<<actual.b_content[i].b_name<<" </td><td>"<<actual.b_content[i].b_inodo<<"</td></tr>\n";
@@ -452,12 +457,11 @@ void ControllerReport::graphTreeFolderBlock(stringstream *cadena, FolderBlock ac
                "    >];\n";
 
     for (int i = 0; i < 4; ++i) {
-        //TODO se cambio el if "." and ".."
         if(actual.b_content[i].b_inodo != -1 && strcmp(actual.b_content[i].b_name, ".") != 0 && strcmp(actual.b_content[i].b_name, "..") != 0){
             InodeTable aux;
             fseek(file, inode_start + ((int) sizeof(InodeTable) * actual.b_content[i].b_inodo), SEEK_SET);
             fread(&aux, sizeof(InodeTable), 1, file);
-            *cadena << "bl"<<numero_block<<":"<<actual.b_content[i].b_inodo << " -> ino"<< actual.b_content[i].b_inodo <<":"<< actual.b_content[i].b_inodo<< " ;\n";
+            *cadena << "bl"<<numero_block<<":b"<<actual.b_content[i].b_inodo << " -> ino"<< actual.b_content[i].b_inodo <<":"<< actual.b_content[i].b_inodo<< " ;\n";
             graphTreeInodo(cadena, aux, file, inode_start, block_start, actual.b_content[i].b_inodo);
         }
     }
