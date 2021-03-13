@@ -412,18 +412,18 @@ void ControllerReport::graphTreeInodo(stringstream *cadena, InodeTable padre, FI
     for (int i = 0; i < 13; ++i) {
         if(padre.i_block[i] != -1) {
             if(padre.i_type == '0'){
-                fseek(file, block_start+((int) sizeof(FolderBlock)*padre.i_block[i]), SEEK_SET);
                 FolderBlock aux;
+                fseek(file, block_start+((int) sizeof(FolderBlock)*padre.i_block[i]), SEEK_SET);
                 fread(&aux, sizeof(FolderBlock), 1, file);
                 graphTreeFolderBlock(cadena, aux, file, inode_start, block_start, padre.i_block[i]);
             } else {
-                fseek(file, block_start+((int) sizeof(FileBlock)*padre.i_block[i]), SEEK_SET);
                 FileBlock fileBlock;
+                fseek(file, block_start+((int) sizeof(FileBlock)*padre.i_block[i]), SEEK_SET);
                 fread(&fileBlock, sizeof(FileBlock), 1, file);
                 *cadena << "bl"<< numero_inodo <<"[\n"
                            "    label=<\n"
                            "        <table color='black' cellspacing='0'>\n"
-                           "            <tr><td bgcolor=\"gold2\" PORT=\"1\">Bloque  </td><td bgcolor=\"gold2\"> 1 </td></tr>\n"
+                           "            <tr><td bgcolor=\"gold2\" PORT=\"1\">Bloque  </td><td bgcolor=\"gold2\">"<<padre.i_block[i]<<"</td></tr>\n"
                            "            <tr><td> b_content </td><td> "<< fileBlock.b_content <<" </td></tr>\n"
                            "       \n"
                            "        </table>\n"
@@ -438,7 +438,7 @@ void ControllerReport::graphTreeFolderBlock(stringstream *cadena, FolderBlock ac
     *cadena << "bl"<< numero_block <<"  [\n"
                "    label=<\n"
                "        <table color='black' cellspacing='0'>\n"
-               "            <tr><td bgcolor=\"greenyellow\" PORT=\""<<numero_block<<"\">Bloque  </td><td bgcolor=\"greenyellow\"> 0 </td></tr>\n"
+               "            <tr><td bgcolor=\"greenyellow\" PORT=\""<<numero_block<<"\">""Bloque  </td><td bgcolor=\"greenyellow\">"<<numero_block<<" </td></tr>\n"
                "            <tr><td>Name</td><td>Inodo </td></tr>\n";
     for (int i = 0; i < 4; ++i) {
         if(actual.b_content[i].b_inodo != -1){
@@ -452,7 +452,8 @@ void ControllerReport::graphTreeFolderBlock(stringstream *cadena, FolderBlock ac
                "    >];\n";
 
     for (int i = 0; i < 4; ++i) {
-        if(actual.b_content[i].b_inodo != -1){
+        //TODO se cambio el if "." and ".."
+        if(actual.b_content[i].b_inodo != -1 && strcmp(actual.b_content[i].b_name, ".") != 0 && strcmp(actual.b_content[i].b_name, "..") != 0){
             InodeTable aux;
             fseek(file, inode_start + ((int) sizeof(InodeTable) * actual.b_content[i].b_inodo), SEEK_SET);
             fread(&aux, sizeof(InodeTable), 1, file);

@@ -829,6 +829,7 @@ void Controller::makeLOGIN(Node *root) {
     }
     int size = userLogin.id.length()-1;
     string id2 = userLogin.id.substr(0,size) + (char) toupper(userLogin.id[size]);
+    userLogin.id = id2;
     Mount* auxMount = listMount->getInstance()->existsMount(id2);
 
     if(auxMount == NULL){

@@ -9,6 +9,10 @@
 #include <fstream>
 #include <ostream>
 #include <sstream>
+#include <cctype>
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
 #include "Structure.h"
 
 using namespace std;

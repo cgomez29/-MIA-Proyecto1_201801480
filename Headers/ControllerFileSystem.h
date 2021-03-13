@@ -110,6 +110,17 @@ struct EBR
 class ControllerFileSystem {
 private:
     SimpleList* listMount = SimpleList::getInstance();
+    int inodo_actual;//Para saber en que inodo comenzar a crear la nueva carpeta
+
+    /* For command MKDIR */
+    void mkdirInodo(InodeTable padre, FILE *file, int numero_inodo, SuperBlock sb,
+                    int part_start, string nameFolder);
+    void mkdirBlock(FolderBlock actual, FILE *file, int numero_block, int mainblock,
+                    SuperBlock sb, int numero_inodo, int part_start, string nameFolder);
+    void update_bm_block(SuperBlock sb, FILE *file);
+    void update_bm_inode(SuperBlock sb, FILE *file);
+    void update_first_ino(int partition_start, FILE *file);
+    void update_first_blo(int partition_start, FILE *file);
 
 public:
     /**
@@ -120,8 +131,9 @@ public:
     void formatEXT2(string path, string name);
     void formatEXT3(string path, string name);
     format getPartitionStart(string path, string name);
-    void fileSystemInit(string path, int inode_start, int block_start);
-    void executeMKDIR(string path, string p, string id);
+    void fileSystemInit(string path, int inode_start, int block_start, int part_start);
+
+    void executeMKDIR(string dir, string p, string id);
 
 };
 

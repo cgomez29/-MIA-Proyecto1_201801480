@@ -74,7 +74,6 @@ private:
     ControllerReport *controllerReport = new ControllerReport();
     ControllerFileSystem *fileSystem = new ControllerFileSystem();
     SimpleList* listMount = SimpleList::getInstance();
-
     /*LOGIN*/
     login userLogin;
 
