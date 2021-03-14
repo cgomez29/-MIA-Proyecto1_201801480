@@ -30,6 +30,7 @@ v_string ("\""[^"\""]*"\"")
 "exec"     {return exec;}
 "login"    {return login;}
 "mkdir"    {return mkdir;}
+"pause"    {return pausev;}
 
 "="         {return equals;}
 
@@ -57,7 +58,9 @@ v_string ("\""[^"\""]*"\"")
 "2fs" {return dosfs;}
 "3fs" {return tresfs;}
 "-ruta" {return ruta;}
+"-usr" {return usuario;}
 "-usuario" {return usuario;}
+"-pwd" {return password;}
 "-password" {return password;}
 "-p" {return p;}
 

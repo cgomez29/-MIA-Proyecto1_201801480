@@ -68,6 +68,7 @@ private:
     struct login {
         string user;
         string id = "";
+        bool isActive = false;
     };
 
     CommandChecker *commandChecker = new CommandChecker();
@@ -104,6 +105,7 @@ private:
     void executeEXEC(Node *root);
     void makeMKDIR(Node *root);
     void makeLOGIN(Node *root);
+    void executePAUSE(Node *root);
 
     /**
      * REPORTS

@@ -34,7 +34,7 @@ void ControllerFileSystem::executeMKFS(string id, string type, string fs) {
     if( partition != NULL){
         if(fs == "3fs"){
             formatEXT3(partition->getPath(), partition->getName());
-        } else{
+        } else {
             formatEXT2(partition->getPath(), partition->getName());
         }
     }
@@ -75,27 +75,70 @@ void ControllerFileSystem::formatEXT2(string path, string name) {
     fseek(file, auxformat.start, SEEK_SET);
     fwrite(&sblock, sizeof(SuperBlock), 1, file);
     char cero = '0';
+    fseek(file, sblock.s_bm_inode_start , SEEK_SET);
     for (int i = 0; i < sblock.s_inodes_count; ++i) {
         fwrite(&cero, 1,1, file);
     }
+    fseek(file, sblock.s_bm_block_start , SEEK_SET);
     for (int i = 0; i < sblock.s_blocks_count; ++i) {
         fwrite(&cero, 1,1, file);
     }
 
-    /**
-     * Se inicializan o no?*
-     *
-     * fseek(file, sblock.s_inode_start, SEEK_SET);
-    InodeTable inodeTable,*/
-
-    /* CREANDO ARCHIVO users.txt */
-    fileSystemInit(path, sblock.s_inode_start, sblock.s_block_start, auxformat.start);
-    cout << "\nFormateo EXT2 completado correctamente!!\n" << endl;
     fclose(file);
+    /* CREANDO ARCHIVO users.txt */
+    fileSystemInit(path, sblock.s_inode_start, sblock.s_block_start, auxformat.start, sblock);
+    cout << "\nFormateo EXT2 completado correctamente!!\n" << endl;
 }
 
 void ControllerFileSystem::formatEXT3(string path, string name) {
+    format auxformat = getPartitionStart(path, name);
 
+    SuperBlock sblock;
+
+    /*Cantidad de inodos*/
+    int n = floor((auxformat.size - sizeof(SuperBlock))/(1+sizeof(Journaling)+3+sizeof(InodeTable)+3*sizeof(FolderBlock)));
+    int bm_inode_start = auxformat.start + sizeof(SuperBlock) + n * sizeof(Journaling);
+    int bm_block_start = bm_inode_start + n;
+    int inode_start = bm_block_start + 3 * n;
+    int block_start = inode_start + n*sizeof(InodeTable);
+
+    sblock.s_filesystem_type = 3; // EXT3 Sistema de archivos utilizado
+    sblock.s_inodes_count = n; // Número total de inodos
+    sblock.s_blocks_count = 3*n; // Número total de bloques
+    sblock.s_free_blocks_count = 3*n; // Número de bloques libres
+    sblock.s_free_inodes_count = n; // Número de inodos libres
+    sblock.s_mtime = time(0); // Última fecha en el que el sistema fue montado
+    sblock.s_umtime = time(0); // Última fecha en el que el sistema fue desmontado
+    sblock.s_mnt_count = 1; // Indica cuantas veces se ha montado el sistema
+    sblock.s_magic = 0xEF53; // Valor que identifica al sistema de archivos
+    sblock.s_inode_size = sizeof(InodeTable); // Tamaño del inodo
+    sblock.s_block_size = sizeof(FolderBlock); // Tamaño del bloque
+    sblock.s_first_ino = 0; // Primer inodo libre
+    sblock.s_first_blo = 0; // Primer bloque libre
+    sblock.s_bm_inode_start = bm_inode_start; // Inicio del bitmap de inodos
+    sblock.s_bm_block_start = bm_block_start; // Inicio del bitmap de bloques
+    sblock.s_inode_start = inode_start; // Inicio de la tabla de inodos
+    sblock.s_block_start = block_start; // Inido de la tabla de bloques
+
+    FILE *file;
+    file = fopen(path.c_str(), "rb+");
+
+    fseek(file, auxformat.start, SEEK_SET);
+    fwrite(&sblock, sizeof(SuperBlock), 1, file);
+    char cero = '0';
+    fseek(file, sblock.s_bm_inode_start , SEEK_SET);
+    for (int i = 0; i < sblock.s_inodes_count; ++i) {
+        fwrite(&cero, 1,1, file);
+    }
+    fseek(file, sblock.s_bm_block_start , SEEK_SET);
+    for (int i = 0; i < sblock.s_blocks_count; ++i) {
+        fwrite(&cero, 1,1, file);
+    }
+
+    fclose(file);
+    /* CREANDO ARCHIVO users.txt */
+    fileSystemInit(path, sblock.s_inode_start, sblock.s_block_start, auxformat.start, sblock);
+    cout << "\nFormateo EXT3 completado correctamente!!\n" << endl;
 }
 
 format ControllerFileSystem::getPartitionStart(string path, string name) {
@@ -145,7 +188,7 @@ format ControllerFileSystem::getPartitionStart(string path, string name) {
     return aux;
 }
 
-void ControllerFileSystem::fileSystemInit(string path, int inode_start, int block_start, int part_start) {
+void ControllerFileSystem::fileSystemInit(string path, int inode_start, int block_start, int part_start, SuperBlock sb) {
     FILE *file;
     file = fopen(path.c_str(), "rb+");
 
@@ -167,7 +210,7 @@ void ControllerFileSystem::fileSystemInit(string path, int inode_start, int bloc
     fwrite(&root, sizeof(InodeTable), 1, file);
 
     update_first_ino(part_start, file);
-
+    update_bm_inode(sb, file);
     /*Creando Inodo 1 de tipo file*/
     InodeTable inodo1; /**Inodo 1*/
     inodo1.i_uid = 1;
@@ -184,7 +227,9 @@ void ControllerFileSystem::fileSystemInit(string path, int inode_start, int bloc
     inodo1.i_block[0] = 1; /**Apunta al bloque 1*/
     fseek(file, inode_start + (int) sizeof(InodeTable), SEEK_SET);
     fwrite(&inodo1, sizeof(InodeTable), 1, file);
+
     update_first_ino(part_start, file);
+    update_bm_inode(sb, file);
 
     //Escribiendo en bloques
     fseek(file, block_start, SEEK_SET);
@@ -204,7 +249,9 @@ void ControllerFileSystem::fileSystemInit(string path, int inode_start, int bloc
     fblock.b_content[3].b_inodo = -1;
 
     fwrite(&fblock, sizeof(FolderBlock), 1, file);
+
     update_first_blo(part_start, file);
+    update_bm_block(sb, file);
 
     /*Creando blque archivo*/
     FileBlock fileBlock; /**Bloque 1*/
@@ -212,9 +259,10 @@ void ControllerFileSystem::fileSystemInit(string path, int inode_start, int bloc
     fseek(file, block_start+(int)sizeof(FileBlock), SEEK_SET);
     fwrite(&fileBlock, sizeof(FileBlock), 1, file);
     update_first_blo(part_start, file);
+    update_bm_block(sb, file);
+
     fclose(file);
 }
-
 
 /************************** MKDIR *********************************/
 
@@ -236,7 +284,7 @@ void ControllerFileSystem::executeMKDIR(string dir, string p, string id) {
 
     //Simpre comenzamos desde el inodo raiz
     inodo_actual = 0;
-
+    carpetaActualBuscada = "";
     if(p=="p") {
         //Iniciando el recorrido
         if(dir[dir.length()-1] != '/') {
@@ -252,13 +300,17 @@ void ControllerFileSystem::executeMKDIR(string dir, string p, string id) {
                 fseek(file, partition.start, SEEK_SET);
                 fread(&sb, sizeof(SuperBlock), 1, file);
                 //ejecutar nombre de carpeta
-                mkdirInodo(root, file, inodo_actual, sb, partition.start, nameFolder);
+                mkdirInodo(root, file, inodo_actual, sb, partition.start, nameFolder, 1); //Enviamos 1 por que la creacion si es forzosa
                 nameFolder = "";
             }
             counter++;
         }
         fclose(file);
     } else {
+        //Se busca la carpeta final que se va a crear
+        int last_slash = dir.rfind('/') +1;
+        string folderNew = dir.substr(last_slash, dir.length()-1);
+
         //Iniciando el recorrido
         if(dir[dir.length()-1] != '/') {
             dir += '/';
@@ -268,16 +320,20 @@ void ControllerFileSystem::executeMKDIR(string dir, string p, string id) {
         while(counter < dir.length()) {
             if(dir[counter] != '/'){
                 nameFolder += dir[counter];
+
             } else {
-                /* Para poder seguir verificando que las carpetas padre de la que va
-                 *  a crear exista se comprueba que la anterior si exista */
+                if(nameFolder == folderNew){
+                    existFolderBlock = true;
+                }
+                /* Para poder seguir verificando que las carpetas padre de la que se va
+                 *  a crear exista, se comprueba que la anterior si exista */
                 if(existFolderBlock) {
                     //Actualizando superbloque por cada carpeta creada i/o buscada
                     fseek(file, partition.start, SEEK_SET);
                     fread(&sb, sizeof(SuperBlock), 1, file);
                     //ejecutar nombre de carpeta
                     existFolderBlock = false;
-                    mkdirInodo(root, file, inodo_actual, sb, partition.start, nameFolder);
+                    mkdirInodo(root, file, inodo_actual, sb, partition.start, nameFolder, 0); // enviamos 0 por que la creacion no es forzosa
                     nameFolder = "";
                 } else {
                     cout << "\n ** ERROR: La carpeta \"" << carpetaActualBuscada << "\" No existe! \n";
@@ -291,8 +347,16 @@ void ControllerFileSystem::executeMKDIR(string dir, string p, string id) {
 }
 
 void ControllerFileSystem::mkdirInodo(InodeTable actual, FILE *file, int numero_inodo,
-                                      SuperBlock sb, int part_start, string nameFolder) {
-
+                                      SuperBlock sb, int part_start, string nameFolder, int p) {
+    int count = -1;
+    for (int i = 0; i < 13; ++i) {
+        //Leyendo el inodo actual para ver si sufrio algun cambio por un bloque nuevo
+        fseek(file, sb.s_inode_start + ((int) sizeof(InodeTable) * numero_inodo), SEEK_SET);
+        fread(&actual, sizeof(InodeTable), 1, file);
+        if (actual.i_block[i] != -1) {
+            count++;
+        }
+    }
     for (int i = 0; i < 13; ++i) {
         //Leyendo el inodo actual para ver si sufrio algun cambio por un bloque nuevo
         fseek(file, sb.s_inode_start+((int) sizeof(InodeTable)*numero_inodo), SEEK_SET);
@@ -308,7 +372,7 @@ void ControllerFileSystem::mkdirInodo(InodeTable actual, FILE *file, int numero_
                 // direccionaando a nuevo bloque
                 fseek(file, sb.s_block_start+((int) sizeof(FolderBlock)*actual.i_block[i]), SEEK_SET);
                 fread(&folderblock, sizeof(FolderBlock), 1, file);
-                mkdirBlock(folderblock, file, actual.i_block[i], i, sb, numero_inodo, part_start, nameFolder);
+                mkdirBlock(folderblock, file, actual.i_block[i], i, sb, numero_inodo, part_start, nameFolder, p, count, i);
             }
         }
     }
@@ -316,29 +380,43 @@ void ControllerFileSystem::mkdirInodo(InodeTable actual, FILE *file, int numero_
 }
 
 void ControllerFileSystem::mkdirBlock(FolderBlock actual, FILE *file, int numero_block, int mainBlock, SuperBlock sb,
-                                      int numero_inodo, int part_start, string nameFolder) {
+                                      int numero_inodo, int part_start, string nameFolder, int p, int useBlocks,
+                                      int iblockActual) {
     // Con esta variable sabemos si la carpeta existe si no la creamos
     bool folderExists = false;
     for (int i = 0; i < 4; ++i) {
-        if (actual.b_content[i].b_inodo != -1 && strcmp(actual.b_content[i].b_name, ".") != 0 &&
-            strcmp(actual.b_content[i].b_name, "..") != 0) {
+        string nameActual;
+        nameActual = actual.b_content[i].b_name;
+        if (actual.b_content[i].b_inodo != -1 && nameActual != "." && nameActual != "..") {
             // Si el folder existe seguimos con su INODO
-            carpetaActualBuscada = nameFolder.c_str();
-            if (strcmp(actual.b_content[i].b_name, nameFolder.c_str()) == 0) {
+            if (nameActual == nameFolder) {
                 /**
                  * SI ENTRO ES QUE LA CARPETA EXISTE y no me sigo metiendo sino que salgo por que se en que inodo estoy
                  * */
-                inodo_actual = numero_inodo;
-                folderExists = true;
+
+                //TODO
+                inodo_actual = actual.b_content[i].b_inodo;//Inodo actual
                 existFolderBlock = true;
+                folderExists = true;
                 /*InodeTable aux;
                 fseek(file, sb.s_inode_start + ((int) sizeof(InodeTable) * actual.b_content[i].b_inodo), SEEK_SET);
                 fread(&aux, sizeof(InodeTable), 1, file);
                 folderExists = true;
-                mkdirInodo(aux, file, actual.b_content[i].b_inodo, sb, part_start, nameFolder);*/
+                mkdirInodo(aux, file, actual.b_content[i].b_inodo, sb, part_start, nameFolder, p);*/
+
 
             }
         }
+    }
+    // si la cantida de bloques recorridos ya se cumplio del inodo actual
+    // y no se encotro la carpeta entonces si se debe crear
+    /*if(useBlocks != iblockActual){
+        folderExists = true;
+    }*/
+
+    if(p==0 && folderExists){ //La creacion no es obligatoria
+        carpetaActualBuscada = nameFolder.c_str();
+        folderExists = true;
     }
 
     // Como no se encontro la carpeta, buscamos un espacio vacio para poder crear nuestro nueva carpeta
@@ -351,83 +429,83 @@ void ControllerFileSystem::mkdirBlock(FolderBlock actual, FILE *file, int numero
             }
         }
     }
+    if (!folderExists) {
+        if (hayEspacio != -1) { //Si es diferente a -1 significa que hay un espacio en el bloque
+            update_bm_block(sb, file); //actualizado el bip map de blocks
+            update_bm_inode(sb, file); //actualizado el bip map de inodos
 
-    if (hayEspacio != -1) { //Si es diferente a -1 significa que hay un espacio en el bloque
-        update_bm_block(sb, file); //actualizado el bip map de blocks
-        update_bm_inode(sb, file); //actualizado el bip map de inodos
+            //Escribiendo el bloque actual b_content.b_inodo en direccion al nuevo inodo
+            actual.b_content[hayEspacio].b_inodo = sb.s_first_ino; // Primer inodo libre - dato del superbloque
+            strcpy(actual.b_content[hayEspacio].b_name, nameFolder.c_str());
+            fseek(file, sb.s_block_start + ((int) sizeof(FolderBlock) * numero_block), SEEK_SET);
+            fwrite(&actual, sizeof(FolderBlock), 1, file);
 
-        //Escribiendo el bloque actual b_content.b_inodo en direccion al nuevo inodo
-        actual.b_content[hayEspacio].b_inodo = sb.s_first_ino; // Primer inodo libre - dato del superbloque
-        strcpy(actual.b_content[hayEspacio].b_name, nameFolder.c_str());
-        fseek(file, sb.s_block_start + ((int) sizeof(FolderBlock) * numero_block), SEEK_SET);
-        fwrite(&actual, sizeof(FolderBlock), 1, file);
+            /** INODO ACTUAL CREADO */
+            inodo_actual = sb.s_first_ino;
 
-        /** INODO ACTUAL CREADO */
-        inodo_actual = sb.s_first_ino;
-
-        //Creando el nuevo inodo
-        InodeTable newInodo;
-        newInodo.i_uid = 1;
-        newInodo.i_gid = 1;
-        newInodo.i_size = 0;
-        newInodo.i_atime = time(0);
-        newInodo.i_ctime = time(0);
-        newInodo.i_mtime = time(0);
-        for (int i = 0; i < 15; ++i) {
-            newInodo.i_block[i] = -1;
-        }
-        newInodo.i_type = '0';
-        newInodo.i_perm = 664;
-        newInodo.i_block[0] = sb.s_first_blo; /**Apunta al bloque 0*/
-        fseek(file, sb.s_inode_start + ((int) sizeof(InodeTable) * sb.s_first_ino), SEEK_SET);
-        fwrite(&newInodo, sizeof(InodeTable), 1, file);
-
-        /* Escribiendo el nuevo bloque */
-        FolderBlock newFolder;
-        strcpy(newFolder.b_content[0].b_name, ".");
-        newFolder.b_content[0].b_inodo = sb.s_first_ino;
-        strcpy(newFolder.b_content[1].b_name, "..");
-        newFolder.b_content[1].b_inodo = numero_inodo; // INODO Padre
-        for (int i = 2; i < 4; ++i) {
-            strcpy(newFolder.b_content[i].b_name, " ");
-            newFolder.b_content[i].b_inodo = -1;
-        }
-        fseek(file, sb.s_block_start + ((int) sizeof(FolderBlock) * sb.s_first_blo), SEEK_SET);
-        fwrite(&newFolder, sizeof(FolderBlock), 1, file);
-
-        update_first_blo(part_start, file);
-        update_first_ino(part_start, file);
-
-    } else {
-        //Escribimos el inodo anterior para que apunte al bloque nuevo
-        InodeTable inodoAnterior;
-        fseek(file, sb.s_inode_start + ((int) sizeof(InodeTable) * numero_inodo), SEEK_SET);
-        fread(&inodoAnterior, sizeof(InodeTable), 1, file);
-
-        for (int i = 0; i < 12; ++i) {
-            if (inodoAnterior.i_block[i] == -1) { //Buscamos el primer espacio libre en el inodo
-                inodoAnterior.i_block[i] = sb.s_first_blo; //Asignano el primer bloque nuevo disponible
-                break;
+            //Creando el nuevo inodo
+            InodeTable newInodo;
+            newInodo.i_uid = 1;
+            newInodo.i_gid = 1;
+            newInodo.i_size = 0;
+            newInodo.i_atime = time(0);
+            newInodo.i_ctime = time(0);
+            newInodo.i_mtime = time(0);
+            for (int i = 0; i < 15; ++i) {
+                newInodo.i_block[i] = -1;
             }
+            newInodo.i_type = '0';
+            newInodo.i_perm = 664;
+            newInodo.i_block[0] = sb.s_first_blo; /**Apunta al bloque 0*/
+            fseek(file, sb.s_inode_start + ((int) sizeof(InodeTable) * sb.s_first_ino), SEEK_SET);
+            fwrite(&newInodo, sizeof(InodeTable), 1, file);
+
+            /* Escribiendo el nuevo bloque */
+            FolderBlock newFolder;
+            strcpy(newFolder.b_content[0].b_name, ".");
+            newFolder.b_content[0].b_inodo = sb.s_first_ino;
+            strcpy(newFolder.b_content[1].b_name, "..");
+            newFolder.b_content[1].b_inodo = numero_inodo; // INODO Padre
+            for (int i = 2; i < 4; ++i) {
+                strcpy(newFolder.b_content[i].b_name, " ");
+                newFolder.b_content[i].b_inodo = -1;
+            }
+            fseek(file, sb.s_block_start + ((int) sizeof(FolderBlock) * sb.s_first_blo), SEEK_SET);
+            fwrite(&newFolder, sizeof(FolderBlock), 1, file);
+
+            update_first_blo(part_start, file);
+            update_first_ino(part_start, file);
+
+        } else {
+            //Escribimos el inodo anterior para que apunte al bloque nuevo
+            InodeTable inodoAnterior;
+            fseek(file, sb.s_inode_start + ((int) sizeof(InodeTable) * numero_inodo), SEEK_SET);
+            fread(&inodoAnterior, sizeof(InodeTable), 1, file);
+
+            for (int i = 0; i < 12; ++i) {
+                if (inodoAnterior.i_block[i] == -1) { //Buscamos el primer espacio libre en el inodo
+                    inodoAnterior.i_block[i] = sb.s_first_blo; //Asignano el primer bloque nuevo disponible
+                    break;
+                }
+            }
+            fseek(file, sb.s_inode_start + ((int) sizeof(InodeTable) * numero_inodo), SEEK_SET);
+            fwrite(&inodoAnterior, sizeof(InodeTable), 1, file);
+
+            update_bm_block(sb, file); //actualizado el bip map de blocks
+
+            //Creamos el nuevo bloque vacio
+            FolderBlock newFolder;
+            for (int i = 0; i < 4; ++i) {
+                strcpy(newFolder.b_content[i].b_name, "");
+                newFolder.b_content[i].b_inodo = -1;
+            }
+            fseek(file, sb.s_block_start + ((int) sizeof(FolderBlock) * sb.s_first_blo), SEEK_SET);
+            fwrite(&newFolder, sizeof(FolderBlock), 1, file);
+
+            update_first_blo(part_start, file);
+
         }
-        fseek(file, sb.s_inode_start + ((int) sizeof(InodeTable) * numero_inodo), SEEK_SET);
-        fwrite(&inodoAnterior, sizeof(InodeTable), 1, file);
-
-        update_bm_block(sb, file); //actualizado el bip map de blocks
-
-        //Creamos el nuevo bloque vacio
-        FolderBlock newFolder;
-        for (int i = 0; i < 4; ++i) {
-            strcpy(newFolder.b_content[i].b_name, "");
-            newFolder.b_content[i].b_inodo = -1;
-        }
-        fseek(file, sb.s_block_start + ((int) sizeof(FolderBlock) * sb.s_first_blo), SEEK_SET);
-        fwrite(&newFolder, sizeof(FolderBlock), 1, file);
-
-        update_first_blo(part_start, file);
-
     }
-
 }
 
 //Actualiza el bip map y Retorna el numero de bip map bloque correspondiete
@@ -477,8 +555,6 @@ void ControllerFileSystem::update_first_blo(int partition_start, FILE *file) {
     fseek(file, partition_start, SEEK_SET);
     fwrite(&sb, sizeof(SuperBlock), 1, file);
 }
-
-
 
 /***********************************************************************/
 

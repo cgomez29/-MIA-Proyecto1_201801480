@@ -81,6 +81,8 @@ void Controller::command(Node *root) {
             makeLOGIN(root);
             return;
         }
+    } else if(root->type == "PAUSE") {
+        executePAUSE(root);
     }
 
     cout << "Comando no valido" << endl;
@@ -118,9 +120,8 @@ void Controller::executeMKDISK(MKDISK disk) {
     FILE *file;
     string path = disk.path;
     //Verificando si ya existe
-    char ruta[path.size()+1];
-    strcpy(ruta, path.c_str());
-    file = fopen(ruta, "r");
+
+    file = fopen(path.c_str(), "r");
     if(file != NULL) {
         msj("El disco ya existe!");
         return;
@@ -154,7 +155,22 @@ void Controller::executeMKDISK(MKDISK disk) {
 
     char test[1];
 
-    file = fopen(ruta, "wb");
+
+    //Creando carpetas si no existen
+    string directory;
+    const size_t last_slash = path.rfind('/');
+    if(string::npos != last_slash){
+        directory = path.substr(0, last_slash) + "/";
+    }
+
+    string cmd = "sudo mkdir -p '" + directory + "'";
+    system(cmd.c_str());
+    cmd = "sudo chmod -R 777 '" + directory + "'";
+    system(cmd.c_str());
+
+
+    file = fopen(path.c_str(), "wb");
+
     for(int i=0; i < disk.size; i++){
         fwrite(&test, sizeof (test), 1, file);
     }
@@ -840,3 +856,7 @@ void Controller::makeLOGIN(Node *root) {
     }
 }
 
+void Controller::executePAUSE(Node *root) {
+    cout << "\nPresione cualquier tecla para continuar ...\n" <<endl;
+    cin.get();
+}

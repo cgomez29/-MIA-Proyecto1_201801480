@@ -107,6 +107,15 @@ struct EBR
     char part_name[16];
 };
 
+struct Journaling {
+    char tipo_operacion[10] = "";
+    char tipo = 'f';
+    char path[40] = "";
+    char contenido[100] = "";
+    time_t fecha;
+    int size;
+};
+
 class ControllerFileSystem {
 private:
     SimpleList* listMount = SimpleList::getInstance();
@@ -115,9 +124,10 @@ private:
     string carpetaActualBuscada;
     /* For command MKDIR */
     void mkdirInodo(InodeTable padre, FILE *file, int numero_inodo, SuperBlock sb,
-                    int part_start, string nameFolder);
+                    int part_start, string nameFolder, int f);
     void mkdirBlock(FolderBlock actual, FILE *file, int numero_block, int mainblock,
-                    SuperBlock sb, int numero_inodo, int part_start, string nameFolder);
+                    SuperBlock sb, int numero_inodo, int part_start, string nameFolder,
+                    int f, int useBlocks, int iblockActual);
     void update_bm_block(SuperBlock sb, FILE *file);
     void update_bm_inode(SuperBlock sb, FILE *file);
     void update_first_ino(int partition_start, FILE *file);
@@ -132,7 +142,8 @@ public:
     void formatEXT2(string path, string name);
     void formatEXT3(string path, string name);
     format getPartitionStart(string path, string name);
-    void fileSystemInit(string path, int inode_start, int block_start, int part_start);
+    void fileSystemInit(string path, int inode_start, int block_start, int part_start,
+                        SuperBlock sb);
 
     void executeMKDIR(string dir, string p, string id);
 

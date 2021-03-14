@@ -197,8 +197,6 @@ void ControllerReport::reportDISK(string diskPath, string path) {
     generateDOT("ReportDISK.txt", path, content);
 }
 
-
-
 string ControllerReport::getTypeExt(string path) {
     string ext = path.substr(path.find("."), path.size());
     if(ext == "pdf"){
@@ -235,9 +233,10 @@ void ControllerReport::generateDOT(string name, string path, string dot) {
 
     cmd = "dot " + getTypeExt(path) + " " + name + " -o " + path;
     system(cmd.c_str());
-    cmd = "xdg-open '" + path + "'";
-    system(cmd.c_str());
-    cout << "Reporte generado" << endl;
+    //For open file
+    //cmd = "xdg-open '" + path + "'";
+    //system(cmd.c_str());
+    cout << "\n REPORTE GENERADO \n" << endl;
 }
 
 void ControllerReport::reportSuperBloque(string diskPath, string part_name, string path) {
