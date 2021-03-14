@@ -327,6 +327,7 @@ void ControllerFileSystem::executeMKDIR(string dir, string p, string id) {
                 }
                 /* Para poder seguir verificando que las carpetas padre de la que se va
                  *  a crear exista, se comprueba que la anterior si exista */
+                carpetaActualBuscada = nameFolder;
                 if(existFolderBlock) {
                     //Actualizando superbloque por cada carpeta creada i/o buscada
                     fseek(file, partition.start, SEEK_SET);
@@ -348,21 +349,19 @@ void ControllerFileSystem::executeMKDIR(string dir, string p, string id) {
 
 void ControllerFileSystem::mkdirInodo(InodeTable actual, FILE *file, int numero_inodo,
                                       SuperBlock sb, int part_start, string nameFolder, int p) {
-    int count = -1;
-    for (int i = 0; i < 13; ++i) {
-        //Leyendo el inodo actual para ver si sufrio algun cambio por un bloque nuevo
-        fseek(file, sb.s_inode_start + ((int) sizeof(InodeTable) * numero_inodo), SEEK_SET);
-        fread(&actual, sizeof(InodeTable), 1, file);
-        if (actual.i_block[i] != -1) {
-            count++;
-        }
-    }
     for (int i = 0; i < 13; ++i) {
         //Leyendo el inodo actual para ver si sufrio algun cambio por un bloque nuevo
         fseek(file, sb.s_inode_start+((int) sizeof(InodeTable)*numero_inodo), SEEK_SET);
         fread(&actual, sizeof(InodeTable), 1, file);
 
         if(actual.i_block[i] != -1){
+            //COntando cuantos bloques tengo
+            int count = -1;
+            for (int i = 0; i < 13; ++i) {
+                if (actual.i_block[i] != -1) {
+                    count++;
+                }
+            }
             /** Checking if folder block */
             //Actualizando superbloque por cada carpeta creada i/o buscada
             fseek(file, part_start, SEEK_SET);
@@ -389,6 +388,7 @@ void ControllerFileSystem::mkdirBlock(FolderBlock actual, FILE *file, int numero
         nameActual = actual.b_content[i].b_name;
         if (actual.b_content[i].b_inodo != -1 && nameActual != "." && nameActual != "..") {
             // Si el folder existe seguimos con su INODO
+            carpetaActualBuscada = nameFolder;
             if (nameActual == nameFolder) {
                 /**
                  * SI ENTRO ES QUE LA CARPETA EXISTE y no me sigo metiendo sino que salgo por que se en que inodo estoy
@@ -410,12 +410,13 @@ void ControllerFileSystem::mkdirBlock(FolderBlock actual, FILE *file, int numero
     }
     // si la cantida de bloques recorridos ya se cumplio del inodo actual
     // y no se encotro la carpeta entonces si se debe crear
-    /*if(useBlocks != iblockActual){
+    if(useBlocks != iblockActual){
         folderExists = true;
-    }*/
+    }
 
-    if(p==0 && folderExists){ //La creacion no es obligatoria
-        carpetaActualBuscada = nameFolder.c_str();
+    if(p==0 && !folderExists){ //La creacion no es obligatoria
+        carpetaActualBuscada = nameFolder;
+        existFolderBlock = false;
         folderExists = true;
     }
 
