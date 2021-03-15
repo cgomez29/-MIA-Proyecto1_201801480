@@ -31,6 +31,7 @@ v_string ("\""[^"\""]*"\"")
 "login"    {return login;}
 "mkdir"    {return mkdir;}
 "pause"    {return pausev;}
+"logout"    {return logout;}
 
 "="         {return equals;}
 

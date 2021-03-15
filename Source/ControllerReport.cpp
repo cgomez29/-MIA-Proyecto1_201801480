@@ -466,3 +466,95 @@ void ControllerReport::graphTreeFolderBlock(stringstream *cadena, FolderBlock ac
     }
 }
 
+void ControllerReport::reporBMBlock(string diskPath, string part_name, string path) {
+    format partition = getPartitionStart(diskPath, part_name);
+
+    FILE *file;
+    file = fopen(diskPath.c_str(),"rb+");
+    SuperBlock sb;
+
+    fseek(file, partition.start, SEEK_SET);
+    fread(&sb, sizeof(SuperBlock), 1, file);
+
+    char value;
+    fseek(file, sb.s_bm_block_start, SEEK_SET);
+    stringstream content;
+    int count = 0;
+    for (int i = 0; i < sb.s_blocks_count; ++i) {
+        fseek(file, sb.s_bm_block_start+i, SEEK_SET);
+        fread(&value, 1, 1, file);
+        if(count == 0){
+            content << "|";
+        }
+        count++;
+        content << " " << value << " |";
+        if(count == 20){
+            content << "\n";
+            count = 0;
+        }
+    }
+    fclose(file);
+    generateTXT(path, content.str());
+}
+
+
+void ControllerReport::generateTXT( string path, string dot) {
+    string directory;
+
+    const size_t last_slash = path.rfind('/');
+    if(string::npos != last_slash){
+        directory = path.substr(0, last_slash) + "/";
+    }
+
+    string name = path.substr(last_slash + 1, path.size());
+    int punto = name.find('.');
+    //Asegurandonos que solo genere un archivo .txt
+    string nameDoc = name.substr(0, punto)+".txt";
+
+
+    string cmd = "sudo mkdir -p '" + directory + "'";
+    system(cmd.c_str());
+    cmd = "sudo chmod -R 777 '" + directory + "'";
+    system(cmd.c_str());
+
+    nameDoc = directory + "/" + nameDoc;
+
+    ofstream file;
+    file.open(nameDoc, ios_base::out | ios_base::trunc);
+    if(file.is_open()){
+        file << dot;
+        file.close();
+    }
+    cout << "\n REPORTE GENERADO \n" << endl;
+}
+
+void ControllerReport::reporBMInode(string diskPath, string part_name, string path) {
+    format partition = getPartitionStart(diskPath, part_name);
+
+    FILE *file;
+    file = fopen(diskPath.c_str(),"rb+");
+    SuperBlock sb;
+
+    fseek(file, partition.start, SEEK_SET);
+    fread(&sb, sizeof(SuperBlock), 1, file);
+
+    char value;
+    fseek(file, sb.s_bm_inode_start, SEEK_SET);
+    stringstream content;
+    int count = 0;
+    for (int i = 0; i < sb.s_inodes_count; ++i) {
+        fseek(file, sb.s_bm_inode_start+i, SEEK_SET);
+        fread(&value, 1, 1, file);
+        if(count == 0){
+            content << "|";
+        }
+        count++;
+        content << " " << value << " |";
+        if(count == 20){
+            content << "\n";
+            count = 0;
+        }
+    }
+    fclose(file);
+    generateTXT(path, content.str());
+}

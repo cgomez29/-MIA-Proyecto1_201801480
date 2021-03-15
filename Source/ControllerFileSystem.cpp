@@ -211,6 +211,7 @@ void ControllerFileSystem::fileSystemInit(string path, int inode_start, int bloc
 
     update_first_ino(part_start, file);
     update_bm_inode(sb, file);
+
     /*Creando Inodo 1 de tipo file*/
     InodeTable inodo1; /**Inodo 1*/
     inodo1.i_uid = 1;
@@ -515,11 +516,13 @@ void ControllerFileSystem::update_bm_block(SuperBlock sb, FILE *file) {
     char uno = '1';
     fseek(file, sb.s_bm_block_start, SEEK_SET);
     fread(&value, 1, 1, file);
-
+    int count = 0;
     while(value != '0'){
-        fseek(file, sb.s_bm_block_start, SEEK_SET);
+        count++;
+        fseek(file, sb.s_bm_block_start + count, SEEK_SET);
         fread(&value, 1, 1, file);
     }
+    fseek(file, sb.s_bm_block_start + count, SEEK_SET);
     fwrite(&uno, 1, 1, file);
 }
 
@@ -527,13 +530,15 @@ void ControllerFileSystem::update_bm_block(SuperBlock sb, FILE *file) {
 void ControllerFileSystem::update_bm_inode(SuperBlock sb, FILE *file) {
     char value;
     char uno = '1';
-    fseek(file, sb.s_bm_block_start, SEEK_SET);
+    fseek(file, sb.s_bm_inode_start, SEEK_SET);
     fread(&value, 1, 1, file);
-
+    int count = 0;
     while(value != '0'){
-        fseek(file, sb.s_bm_block_start, SEEK_SET);
+        count++;
+        fseek(file, sb.s_bm_inode_start + count, SEEK_SET);
         fread(&value, 1, 1, file);
     }
+    fseek(file, sb.s_bm_inode_start + count, SEEK_SET);
     fwrite(&uno, 1, 1, file);
 }
 
@@ -558,7 +563,6 @@ void ControllerFileSystem::update_first_blo(int partition_start, FILE *file) {
 }
 
 /***********************************************************************/
-
 
 /**
  *  > /users.txt

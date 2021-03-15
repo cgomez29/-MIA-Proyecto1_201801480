@@ -37,6 +37,7 @@ class Node          *node;
 %token <stringVal> login
 %token <stringVal> mkdir
 %token <stringVal> pausev
+%token <stringVal> logout
 
 // Parameters
 %token <stringVal> size
@@ -126,6 +127,7 @@ Commands
     | unmount id equals v_string    { $$ = new Node("UNMOUNT", $4); }
     | unmount id equals v_id2       { $$ = new Node("UNMOUNT", $4); }
     | pausev                        { $$ = new Node("PAUSE", "pause"); }
+    | logout                        { $$ = new Node("LOGOUT", "logout"); }
     | mkfs MKFSParams               { $$ = new Node("MKFS", ""); $$->add(*$2); }
     | rep REPParams                 { $$ = new Node("REP", ""); $$->add(*$2); }
     | exec EXECParams               { $$ = new Node("EXEC", ""); $$->add(*$2); }

@@ -106,6 +106,7 @@ private:
     void makeMKDIR(Node *root);
     void makeLOGIN(Node *root);
     void executePAUSE(Node *root);
+    void executeLOGOUT(Node *root);
 
     /**
      * REPORTS

@@ -105,6 +105,7 @@ private:
 
     string getTypeExt(string);
     void generateDOT(string, string, string);
+    void generateTXT( string, string);
     void graphTreeInodo(stringstream *cadena, InodeTable padre, FILE *file, int inode_start, int block_start,
                         int numero_inodo);
     void graphTreeFolderBlock(stringstream *cadena, FolderBlock actual, FILE *file, int inode_start, int block_start,
@@ -117,6 +118,8 @@ public:
     void reportTree(string diskPath, string part_name, string path);
     format getPartitionStart(string path, string name);
     string getNameDisk(string path);
+    void reporBMBlock(string diskPath, string part_name, string path);
+    void reporBMInode(string diskPath, string part_name, string path);
 };
 
 

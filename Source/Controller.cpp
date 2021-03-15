@@ -83,6 +83,8 @@ void Controller::command(Node *root) {
         }
     } else if(root->type == "PAUSE") {
         executePAUSE(root);
+    } else if(root->type == "LOGOUT") {
+        executeLOGOUT(root);
     }
 
     cout << "Comando no valido" << endl;
@@ -770,16 +772,23 @@ void Controller::executeREP() {
         } else if(name == "DISK" || name == "disk"){
             controllerReport->reportDISK(auxMount->getPath(),path);
         } else if(name == "INODE" || name == "inode"){
+
         } else if(name == "Journaling" || name == "journaling"){
+
         } else if(name == "BLOCK" || name == "block"){
+
         } else if(name == "bm_inode" || name == "BM_INODE"){
+            controllerReport->reporBMInode(auxMount->getPath(), auxMount->getName(), path);
         } else if(name == "bm_block" || name == "BM_BLOCK"){
+            controllerReport->reporBMBlock(auxMount->getPath(), auxMount->getName(), path);
         } else if(name == "tree" || name == "TREE"){
             controllerReport->reportTree(auxMount->getPath(), auxMount->getName(), path);
         } else if(name == "sb" || name == "SB"){
             controllerReport->reportSuperBloque(auxMount->getPath(), auxMount->getName(), path);
         } else if(name == "file" || name == "FILE"){
+
         } else if(name == "ls" || name == "ls"){
+
         }
     }
 }
@@ -829,34 +838,50 @@ void Controller::makeMKDIR(Node *root) {
 }
 
 void Controller::makeLOGIN(Node *root) {
-    list<Node> :: iterator aux;
-    aux = root->childs.begin()->childs.begin();
-    int counter = 0;
-    while(counter < root->childs.begin()->count) {
-        if(aux->type == "USUARIO"){
-            userLogin.user = aux->value;
-        } else if(aux->type == "PASSWORD") {
-            //TODO pendiente
-        } else if(aux->type == "ID") {
-            userLogin.id = aux->value;
+    if(!userLogin.isActive){ //No debe haber una sesion abierta para poder voler a iniciar
+        list<Node> :: iterator aux;
+        aux = root->childs.begin()->childs.begin();
+        int counter = 0;
+        while(counter < root->childs.begin()->count) {
+            if(aux->type == "USUARIO"){
+                userLogin.user = aux->value;
+            } else if(aux->type == "PASSWORD") {
+                //TODO pendiente
+            } else if(aux->type == "ID") {
+                userLogin.id = aux->value;
+            }
+            aux++;
+            counter++;
         }
-        aux++;
-        counter++;
-    }
-    int size = userLogin.id.length()-1;
-    string id2 = userLogin.id.substr(0,size) + (char) toupper(userLogin.id[size]);
-    userLogin.id = id2;
-    Mount* auxMount = listMount->getInstance()->existsMount(id2);
+        int size = userLogin.id.length()-1;
+        string id2 = userLogin.id.substr(0,size) + (char) toupper(userLogin.id[size]);
+        Mount* auxMount = listMount->getInstance()->existsMount(id2);
 
-    if(auxMount == NULL){
-        cout << "\n Partición: "<< id2 << " No se encuentra montada!\n" << endl;
+        if(auxMount == NULL){
+            cout << "\n Partición: "<< id2 << " No se encuentra montada!\n" << endl;
+        } else {
+            userLogin.id = id2;
+            userLogin.isActive = true;
+            cout << "\n** BIENVENIDO **" << endl;
+            cout << "\n "<< "USUARIO: " << userLogin.user <<" \n" << endl;
+        }
     } else {
-        cout << "\n** BIENVENIDO **" << endl;
-        cout << "\n "<< "USUARIO: " << userLogin.user <<" \n" << endl;
+        cout << "\n - Cerrar la sesión antes de registrarse con un usuario diferente! -\n" << endl;
     }
 }
 
 void Controller::executePAUSE(Node *root) {
     cout << "\nPresione cualquier tecla para continuar ...\n" <<endl;
     cin.get();
+}
+
+void Controller::executeLOGOUT(Node *root) {
+    if(userLogin.isActive){
+        userLogin.user = "";
+        userLogin.id = "";
+        userLogin.isActive = false;
+        cout << "\n * Sesión cerrada * \n" << endl;
+    } else {
+        cout << "\n ERROR: No hay ninguna sesión activa! \n" << endl;
+    }
 }
