@@ -184,8 +184,9 @@ format ControllerFileSystem::getPartitionStart(string path, string name) {
         fread(&auxEBR, sizeof(EBR), 1, file);
         while(auxEBR.part_next != -1){
             if(auxEBR.part_name == name){
-                aux.start = auxEBR.part_start;
-                aux.size = auxEBR.part_size;
+                /**A las particiones logicas le sumamos lo que que ocupa el ebr y se lo restamos al size*/
+                aux.start = (int) sizeof(EBR) + auxEBR.part_start;
+                aux.size = auxEBR.part_size - (int) sizeof(EBR) ;
                 return aux;
             }
             fseek(file, auxEBR.part_next, SEEK_SET);
@@ -193,8 +194,8 @@ format ControllerFileSystem::getPartitionStart(string path, string name) {
         }
         // checking current EBR
         if(auxEBR.part_name == name){
-            aux.start = auxEBR.part_start;
-            aux.size = auxEBR.part_size;
+            aux.start = auxEBR.part_start + (int) sizeof(EBR) ;
+            aux.size = auxEBR.part_size - (int) sizeof(EBR) ;
             return aux;
         }
     }

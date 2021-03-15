@@ -763,10 +763,10 @@ void Controller::executeMount(string path, string name) {
             if(auxMBR.mbr_partition[i].part_name == name) {
                 listMount->getInstance()->add("", path, name);
                 existsPartition = true;
-                if(auxMBR.mbr_partition[i].part_type == 'e'){
-                    indexEBR = i;
-                }
                 break;
+            }
+            if(auxMBR.mbr_partition[i].part_type == 'e' && auxMBR.mbr_partition[i].part_status != '0'){
+                indexEBR = i;
             }
         }
 
@@ -860,6 +860,7 @@ void Controller::executeREP() {
         } else if(name == "bm_block" || name == "BM_BLOCK"){
             controllerReport->reporBMBlock(auxMount->getPath(), auxMount->getName(), path);
         } else if(name == "tree" || name == "TREE"){
+
             controllerReport->reportTree(auxMount->getPath(), auxMount->getName(), path);
         } else if(name == "sb" || name == "SB"){
             controllerReport->reportSuperBloque(auxMount->getPath(), auxMount->getName(), path);
