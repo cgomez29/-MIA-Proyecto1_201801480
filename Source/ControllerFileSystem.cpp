@@ -33,14 +33,14 @@ void ControllerFileSystem::executeMKFS(string id, string type, string fs) {
 
     if( partition != NULL){
         if(fs == "3fs"){
-            formatEXT3(partition->getPath(), partition->getName());
+            formatEXT3(partition->getPath(), partition->getName(), type);
         } else {
-            formatEXT2(partition->getPath(), partition->getName());
+            formatEXT2(partition->getPath(), partition->getName(), type);
         }
     }
 }
 
-void ControllerFileSystem::formatEXT2(string path, string name) {
+void ControllerFileSystem::formatEXT2(string path, string name, string type) {
     format auxformat = getPartitionStart(path, name);
 
     SuperBlock sblock;
@@ -71,6 +71,20 @@ void ControllerFileSystem::formatEXT2(string path, string name) {
 
     FILE *file;
     file = fopen(path.c_str(), "rb+");
+    char nulo ='\0';
+
+    if(type == "full"){
+        int countSizeInode = n * (int) sizeof(InodeTable);
+        int countSizeBlock = 3 * n * (int) sizeof(FolderBlock);
+        fseek(file, sblock.s_inode_start, SEEK_SET);
+        for (int i = 0; i < countSizeInode; ++i) {
+            fwrite(&nulo, 1, 1, file);
+        }
+        fseek(file, sblock.s_block_start, SEEK_SET);
+        for (int i = 0; i < countSizeBlock; ++i) {
+            fwrite(&nulo, 1, 1, file);
+        }
+    }
 
     fseek(file, auxformat.start, SEEK_SET);
     fwrite(&sblock, sizeof(SuperBlock), 1, file);
@@ -90,7 +104,7 @@ void ControllerFileSystem::formatEXT2(string path, string name) {
     cout << "\nFormateo EXT2 completado correctamente!!\n" << endl;
 }
 
-void ControllerFileSystem::formatEXT3(string path, string name) {
+void ControllerFileSystem::formatEXT3(string path, string name, string type) {
     format auxformat = getPartitionStart(path, name);
 
     SuperBlock sblock;

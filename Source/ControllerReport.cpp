@@ -62,11 +62,44 @@ void ControllerReport::reportMBR(string diskPath, string path) {
 
     EBR auxEBR;
     /*If it is different of -1 then is EBR partition*/
-    if(indexEBR != -1){
+    if(indexEBR != -1) {
         fseek(file, auxMBR.mbr_partition[indexEBR].part_start, SEEK_SET);
         fread(&auxEBR, sizeof(EBR), 1, file);
         int counter = 1;
-        while(auxEBR.part_next != -1){
+        while (auxEBR.part_next != -1) {
+            if (auxEBR.part_status != '0') {
+                content += "subgraph cluster_" + to_string(counter) + " {\n"
+                          "     \n"
+                          "    \n"
+                          "    \n"
+                          "  tbl" + to_string(counter) + " [\n"
+                          "    label= < \n"
+                          "      <table cellspacing='0' CELLPADDING=\"5\">\n"
+                          "        <tr><td bgcolor=\"lightblue\"  >Nombre</td><td bgcolor=\"lightblue\">Valor</td></tr>\n"
+                          "        \n"
+                          "        <tr><td>part_status_" + to_string(counter) + " </td><td> " + auxEBR.part_status + " </td></tr>\n"
+                          "        <tr><td>part_fit_" +to_string(counter) + " </td><td> " + auxEBR.part_fit + " </td></tr>\n"
+                          "        <tr><td>part_start_" +to_string(counter) + " </td><td> " + to_string(auxEBR.part_start) + " </td></tr>\n"
+                          "        <tr><td>part_size_" +to_string(counter) + " </td><td> " + to_string(auxEBR.part_size) + " </td></tr>\n"
+                          "        <tr><td>part_next_" +to_string(counter) + " </td><td> " + to_string(auxEBR.part_next) + " </td></tr>\n"
+                          "        <tr><td>part_name_" +to_string(counter) + " </td><td> " + auxEBR.part_name + " </td></tr>\n"
+                          "        \n"
+                          "      </table>\n"
+                          "        \n"
+                          "    >];\n"
+                          "    labelloc=\"t\";\n"
+                          "    label=\"EBR_" +
+                           to_string(counter) + "  \";\n"
+                           "    fontsize  = 20;\n"
+                           "    }\n";
+
+            }
+            counter++;
+            fseek(file, auxEBR.part_next, SEEK_SET);
+            fread(&auxEBR, sizeof(EBR), 1, file);
+        }
+        /*Escribe el EBR actual*/
+        if (auxEBR.part_status != '0') {
             content += "subgraph cluster_" + to_string(counter) + " {\n"
                        "     \n"
                        "    \n"
@@ -76,49 +109,29 @@ void ControllerReport::reportMBR(string diskPath, string path) {
                        "      <table cellspacing='0' CELLPADDING=\"5\">\n"
                        "        <tr><td bgcolor=\"lightblue\"  >Nombre</td><td bgcolor=\"lightblue\">Valor</td></tr>\n"
                        "        \n"
-                       "        <tr><td>part_status_"+ to_string(counter) +" </td><td> " + auxEBR.part_status +" </td></tr>\n"
-                       "        <tr><td>part_fit_"+ to_string(counter) +" </td><td> "+ auxEBR.part_fit +" </td></tr>\n"
-                       "        <tr><td>part_start_"+ to_string(counter) +" </td><td> "+ to_string(auxEBR.part_start) +" </td></tr>\n"
-                       "        <tr><td>part_size_"+ to_string(counter) +" </td><td> "+ to_string(auxEBR.part_size) +" </td></tr>\n"
-                       "        <tr><td>part_next_"+ to_string(counter) +" </td><td> "+ to_string(auxEBR.part_next) +" </td></tr>\n"
-                       "        <tr><td>part_name_"+ to_string(counter) +" </td><td> "+ auxEBR.part_name +" </td></tr>\n"
+                       "        <tr><td>part_status_" +
+                       to_string(counter) + " </td><td> " + auxEBR.part_status + " </td></tr>\n"
+                                                                                 "        <tr><td>part_fit_" +
+                       to_string(counter) + " </td><td> " + auxEBR.part_fit + " </td></tr>\n"
+                                                                              "        <tr><td>part_start_" +
+                       to_string(counter) + " </td><td> " + to_string(auxEBR.part_start) + " </td></tr>\n"
+                                                                                           "        <tr><td>part_size_" +
+                       to_string(counter) + " </td><td> " + to_string(auxEBR.part_size) + " </td></tr>\n"
+                                                                                          "        <tr><td>part_next_" +
+                       to_string(counter) + " </td><td> " + to_string(auxEBR.part_next) + " </td></tr>\n"
+                                                                                          "        <tr><td>part_name_" +
+                       to_string(counter) + " </td><td> " + auxEBR.part_name + " </td></tr>\n"
                        "        \n"
                        "      </table>\n"
                        "        \n"
                        "    >];\n"
                        "    labelloc=\"t\";\n"
-                       "    label=\"EBR_"+ to_string(counter)+"  \";\n"
+                       "    label=\"EBR_" + to_string(counter) +
+                       "  \";\n"
                        "    fontsize  = 20;\n"
                        "    }\n";
-            counter++;
 
-            fseek(file, auxEBR.part_next, SEEK_SET);
-            fread(&auxEBR, sizeof(EBR), 1, file);
         }
-        /*Escribe el EBR actual*/
-        content += "subgraph cluster_" + to_string(counter) + " {\n"
-                   "     \n"
-                   "    \n"
-                   "    \n"
-                   "  tbl" + to_string(counter) + " [\n"
-                   "    label= < \n"
-                   "      <table cellspacing='0' CELLPADDING=\"5\">\n"
-                   "        <tr><td bgcolor=\"lightblue\"  >Nombre</td><td bgcolor=\"lightblue\">Valor</td></tr>\n"
-                   "        \n"
-                   "        <tr><td>part_status_"+ to_string(counter) +" </td><td> " + auxEBR.part_status +" </td></tr>\n"
-                   "        <tr><td>part_fit_"+ to_string(counter) +" </td><td> "+ auxEBR.part_fit +" </td></tr>\n"
-                   "        <tr><td>part_start_"+ to_string(counter) +" </td><td> "+ to_string(auxEBR.part_start) +" </td></tr>\n"
-                   "        <tr><td>part_size_"+ to_string(counter) +" </td><td> "+ to_string(auxEBR.part_size) +" </td></tr>\n"
-                   "        <tr><td>part_next_"+ to_string(counter) +" </td><td> "+ to_string(auxEBR.part_next) +" </td></tr>\n"
-                   "        <tr><td>part_name_"+ to_string(counter) +" </td><td> "+ auxEBR.part_name +" </td></tr>\n"
-                   "        \n"
-                   "      </table>\n"
-                   "        \n"
-                   "    >];\n"
-                   "    labelloc=\"t\";\n"
-                   "    label=\"EBR_"+ to_string(counter)+"  \";\n"
-                   "    fontsize  = 20;\n"
-                   "    }\n";
     }
     fclose(file);
     content +=       "}";

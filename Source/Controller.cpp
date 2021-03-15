@@ -296,23 +296,22 @@ void Controller::executeFDISK(string path, char type, char fit, int size, char n
         size = size * 1024 * 1024;
     }
 
-    if(type == 'p') {
-        createPrimaryPartition(auxDisk, path, fit, size, name, unit);
-    } else if(type == 'e') {
-        createExtendPartition(auxDisk, path, fit, size, name, unit);
-    } else if (type == 'l') {
-        createLogicPartition(auxDisk, path, fit, size, name, unit);
-    } else if (cDelete != "") {
+    if (cDelete != "") {
         deletePartition(auxDisk, path, name, cDelete);
+    } else {
+        if(type == 'p') {
+            createPrimaryPartition(auxDisk, path, fit, size, name, unit);
+        } else if(type == 'e') {
+            createExtendPartition(auxDisk, path, fit, size, name, unit);
+        } else if (type == 'l') {
+            createLogicPartition(auxDisk, path, fit, size, name, unit);
+        }
     }
-
-
-
 }
 
 int Controller::firstFit(MBR mbr) {
     for (int i = 0; i < 4; ++i) {
-        if(mbr.mbr_partition[i].part_start == -1) {
+        if(mbr.mbr_partition[i].part_start == -1 || mbr.mbr_partition[i].part_status == '0') {
             return i;
         }
     }
@@ -323,7 +322,7 @@ int Controller::bestFit(MBR mbr) {
     int aux = 0;
     bool flag = false;
     for (int i = 0; i < 4; ++i) {
-        if(mbr.mbr_partition[i].part_start == -1) {
+        if(mbr.mbr_partition[i].part_start == -1 || mbr.mbr_partition[i].part_status == '0') {
 
             return i;
             /*flag = true;
@@ -343,7 +342,7 @@ int Controller::worstFit(MBR mbr) {
     int aux = 0;
     bool flag = false;
     for (int i = 0; i < 4; ++i) {
-        if(mbr.mbr_partition[i].part_start == -1) {
+        if(mbr.mbr_partition[i].part_start == -1 || mbr.mbr_partition[i].part_status == '0') {
             return i;
         } /*else {
             flag = true;
@@ -594,9 +593,9 @@ void Controller::createLogicPartition(MBR mbr, string path, char fit, int size, 
     fclose(file);
 }
 
-void Controller::deletePartition(MBR mbr, string path, char name[16], string commandDelete) {
+void Controller::deletePartition(MBR auxMBR, string path, char name[16], string commandDelete) {
     FILE *file;
-
+    bool seElimino = false;
     file = fopen(path.c_str(),"rb+");
 
     string input;
@@ -610,40 +609,112 @@ void Controller::deletePartition(MBR mbr, string path, char name[16], string com
         }
     }
 
-    int index = -1;
+    fseek(file,0,SEEK_SET);
+    fread(&auxMBR, sizeof(MBR), 1, file);
+    bool deleteEBR = false;
+    int indexEBR = -1;
     for (int i = 0; i < 4; ++i) {
-        /*Checking if partition exists */
-        if(strcmp(mbr.mbr_partition[i].part_name, name) == 0){
-            index = i;
-            break;
+        if(strcmp(auxMBR.mbr_partition[i].part_name, name)==0) {
+            auxMBR.mbr_partition[i].part_status = '0';
+
+            fseek(file, 0, SEEK_SET);
+            fwrite(&auxMBR, sizeof(MBR), 1, file);
+
+            if(commandDelete == "full"){
+                char nulo = '\0';
+                fseek(file, auxMBR.mbr_partition[i].part_start, SEEK_SET);
+                for (int j = 0; j < auxMBR.mbr_partition[i].part_size; ++j) {
+                    fwrite(&nulo,1,1,file);
+                }
+            }
+            seElimino = true;
+            if(auxMBR.mbr_partition[i].part_type == 'e'){
+                deleteEBR = true; // detiene la busqueda hacia los EBR
+                EBR auxEBR;
+                fseek(file, auxMBR.mbr_partition[i].part_start, SEEK_SET);
+                fread(&auxEBR, sizeof(EBR), 1, file);
+
+                fseek(file, auxMBR.mbr_partition[indexEBR].part_start, SEEK_SET);
+                fread(&auxEBR, sizeof(EBR), 1, file);
+                while(auxEBR.part_next != -1){
+                    auxEBR.part_status = '0';
+                    fseek(file, auxEBR.part_start, SEEK_SET);
+                    fwrite(&auxEBR, sizeof(EBR), 1, file);
+
+                    if(commandDelete == "full"){
+                        char nulo = '\0';
+                        //fseek(file,auxEBR.part_start, SEEK_SET);
+                        for (int j = 0; j < auxEBR.part_size-(int) sizeof(EBR); ++j) {
+                            fwrite(&nulo,1,1,file);
+                        }
+                    }
+                    seElimino = true;
+
+                    fseek(file, auxEBR.part_next, SEEK_SET);
+                    fread(&auxEBR, sizeof(EBR), 1, file);
+                }
+                // checking current EBR
+                auxEBR.part_status = '0';
+                fseek(file, auxEBR.part_start, SEEK_SET);
+                fwrite(&auxEBR, sizeof(EBR), 1, file);
+
+                if(commandDelete == "full"){
+                    char nulo = '\0';
+                    for (int j = 0; j < auxEBR.part_size - (int) sizeof(EBR); ++j) {
+                        fwrite(&nulo, 1, 1, file);
+                    }
+                }
+                seElimino = true;
+
+            }
+        }
+        if(auxMBR.mbr_partition[i].part_type == 'e' && !deleteEBR){
+            indexEBR = i;
         }
     }
-    if(index != -1) {
-        /*Checking if partition is unmount*/
-        if(mbr.mbr_partition[index].part_status != '2'){
-            /*if it is EBR the partition logic is eliminated*/
-            if(mbr.mbr_partition[index].part_type == 'e') {
-                /* Deleting logical partitions */
-                //TODO
+
+    EBR auxEBR;
+    /*If it is different of -1 then is EBR partition*/
+    if(indexEBR != -1){
+        fseek(file, auxMBR.mbr_partition[indexEBR].part_start, SEEK_SET);
+        fread(&auxEBR, sizeof(EBR), 1, file);
+        while(auxEBR.part_next != -1){
+            if(strcmp(auxEBR.part_name, name)==0){
+                auxEBR.part_status = '0';
+                fseek(file, auxEBR.part_start, SEEK_SET);
+                fwrite(&auxEBR, sizeof(EBR), 1, file);
+
+                if(commandDelete == "full"){
+                    char nulo = '\0';
+                    //fseek(file,auxEBR.part_start, SEEK_SET);
+                    for (int j = 0; j < auxEBR.part_size-(int) sizeof(EBR); ++j) {
+                        fwrite(&nulo,1,1,file);
+                    }
+                }
+                seElimino = true;
             }
-            /* Settings for full*/
-            if(commandDelete == "full") {
-                fseek(file, mbr.mbr_partition[index].part_start, SEEK_SET);
-                for (int i = 0; i < mbr.mbr_partition[index].part_size; ++i) {
+            fseek(file, auxEBR.part_next, SEEK_SET);
+            fread(&auxEBR, sizeof(EBR), 1, file);
+        }
+        // checking current EBR
+        if(strcmp(auxEBR.part_name, name)==0){
+            auxEBR.part_status = '0';
+            fseek(file, auxEBR.part_start, SEEK_SET);
+            fwrite(&auxEBR, sizeof(EBR), 1, file);
+
+            if(commandDelete == "full"){
+                char nulo = '\0';
+                for (int j = 0; j < auxEBR.part_size - (int) sizeof(EBR); ++j) {
                     fwrite(&nulo, 1, 1, file);
                 }
             }
-            /* Common fast and full settings */
-            mbr.mbr_partition[index].part_status = '0';
-            mbr.mbr_partition[index].part_start = -1;
-
-            fseek(file, 0, SEEK_SET);
-            fwrite(&mbr, sizeof(MBR), 1, file);
-        } else {
-            msj(string("Para poder eliminar la particion : ") + name + " debe de desmontarla primero!");
+            seElimino = true;
         }
+    }
+    if(seElimino){
+        cout << "\n La particion se elimino correctamente \n"<<endl;
     } else {
-        msj("ERROR: La particion que desea eliminar no existe!");
+        cout << "\n * No se encontro la particion a eliminar! * \n"<<endl;
     }
     fclose(file);
 }
@@ -678,49 +749,56 @@ void Controller::executeMount(string path, string name) {
         msj("El disco no existe!");
         return;
     }
+    Mount* mo = listMount->existsMount2(name);
 
-    bool existsPartition =  false;
+    if(mo == NULL) {
+        bool existsPartition =  false;
 
-    MBR auxMBR;
-    fseek(file,0,SEEK_SET);
-    fread(&auxMBR, sizeof(MBR), 1, file);
+        MBR auxMBR;
+        fseek(file,0,SEEK_SET);
+        fread(&auxMBR, sizeof(MBR), 1, file);
 
-    int indexEBR = -1;
-    for (int i = 0; i < 4; ++i) {
-        if(auxMBR.mbr_partition[i].part_name == name) {
-            listMount->getInstance()->add("", path, name);
-            existsPartition = true;
-            break;
+        int indexEBR = -1;
+        for (int i = 0; i < 4; ++i) {
+            if(auxMBR.mbr_partition[i].part_name == name) {
+                listMount->getInstance()->add("", path, name);
+                existsPartition = true;
+                if(auxMBR.mbr_partition[i].part_type == 'e'){
+                    indexEBR = i;
+                }
+                break;
+            }
         }
-        if(auxMBR.mbr_partition[i].part_type == 'e'){
-            indexEBR = i;
-        }
-    }
 
-    EBR auxEBR;
-    /*If it is different of -1 then is EBR partition*/
-    if(indexEBR != -1){
-        fseek(file, auxMBR.mbr_partition[indexEBR].part_start, SEEK_SET);
-        fread(&auxEBR, sizeof(EBR), 1, file);
-        while(auxEBR.part_next != -1){
+        EBR auxEBR;
+        /*If it is different of -1 then is EBR partition*/
+        if(indexEBR != -1){
+            fseek(file, auxMBR.mbr_partition[indexEBR].part_start, SEEK_SET);
+            fread(&auxEBR, sizeof(EBR), 1, file);
+            while(auxEBR.part_next != -1){
+                if(auxEBR.part_name == name){
+                    listMount->getInstance()->add("", path, name);
+                    existsPartition = true;
+                    break;
+                }
+                fseek(file, auxEBR.part_next, SEEK_SET);
+                fread(&auxEBR, sizeof(EBR), 1, file);
+            }
+            // checking current EBR
             if(auxEBR.part_name == name){
                 listMount->getInstance()->add("", path, name);
                 existsPartition = true;
-                break;
             }
-            fseek(file, auxEBR.part_next, SEEK_SET);
-            fread(&auxEBR, sizeof(EBR), 1, file);
         }
-        // checking current EBR
-        if(auxEBR.part_name == name){
-            listMount->getInstance()->add("", path, name);
-            existsPartition = true;
+        fclose(file);
+        if(!existsPartition){
+            cout << "\nNo existe la partición: " << name << "\n"<< endl;
         }
+    } else {
+        cout << "\n Particion: "<< mo->getName() << " ya esta montada! \n"<< endl;
+        cout << "\n Con ID: "<< mo->getId() << "\n"<< endl;
     }
-    fclose(file);
-    if(!existsPartition){
-        cout << "No existe la partición: " << name << endl;
-    }
+
 }
 
 void Controller::makeUnMount(Node *root) {

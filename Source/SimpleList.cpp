@@ -138,6 +138,17 @@ Mount* SimpleList::existsMount(string id) {
     return NULL;
 }
 
+Mount* SimpleList::existsMount2(string name) {
+    Mount* aux = this->head;
+    while (aux != NULL){
+        if(aux->getName() == name){
+            return aux;
+        }
+        aux = aux->getNext();
+    }
+    return NULL;
+}
+
 Mount* SimpleList::existsMountObject(string id) {
     Mount* aux = this->head;
     while (aux != NULL){

@@ -26,6 +26,7 @@ public:
     char checkLetterMount(string);
     int checkNumberMount(string);
     Mount* existsMount(string);
+    Mount* existsMount2(string);
     Mount* existsMountObject(string);
 };
 

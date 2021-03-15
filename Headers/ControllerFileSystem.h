@@ -139,8 +139,8 @@ public:
      * */
     void makeMKFS(Node *root);
     void executeMKFS(string, string, string);
-    void formatEXT2(string path, string name);
-    void formatEXT3(string path, string name);
+    void formatEXT2(string path, string name, string type);
+    void formatEXT3(string path, string name, string type);
     format getPartitionStart(string path, string name);
     void fileSystemInit(string path, int inode_start, int block_start, int part_start,
                         SuperBlock sb);

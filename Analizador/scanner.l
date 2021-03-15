@@ -75,7 +75,7 @@ v_string ("\""[^"\""]*"\"")
 [[:blank:]]     {}
 .               {
                     if(yytext != "\r"){
-                        std::cout << "Error Léxico: " << yytext << std::endl;
+                        std::cout << "Error : " << yytext << std::endl;
                     }
                 }
 %%

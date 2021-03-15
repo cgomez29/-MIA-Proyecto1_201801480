@@ -12,7 +12,7 @@ extern Node *root;
 
 
 int yyerror(const char* msg){
-        std::cout<< "Error sintáctico: " << msg << std::endl;
+        std::cout<< "Error: " << msg << std::endl;
         return 0;
 }
 

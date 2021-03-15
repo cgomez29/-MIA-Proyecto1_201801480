@@ -1194,7 +1194,7 @@ YY_RULE_SETUP
 #line 76 "scanner.l"
 {
                     if(yytext != "\r"){
-                        std::cout << "Error Léxico: " << yytext << std::endl;
+                        std::cout << "Error : " << yytext << std::endl;
                     }
                 }
 	YY_BREAK
