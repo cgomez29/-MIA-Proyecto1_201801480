@@ -211,7 +211,7 @@ void ControllerReport::reportDISK(string diskPath, string path) {
 }
 
 string ControllerReport::getTypeExt(string path) {
-    string ext = path.substr(path.find("."), path.size());
+    string ext = path.substr(path.find(".")+1, path.size());
     if(ext == "pdf"){
         return "-Tpdf";
     }else if(ext == "png"){

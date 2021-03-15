@@ -5,6 +5,12 @@
 #include "Headers/SimpleList.h"
 
 int main() {
+    cout << "=====================================" << endl;
+    cout << " USAC" << endl;
+    cout << " PROYECTO 1 - MIA" << endl;
+    cout << " Cristian Alexander Gómez Guzmán" << endl;
+    cout << " 201801480 " << endl;
+    cout << " ==================================== \n" << endl;
     Controller *controller = new Controller();
     controller->run();
 
